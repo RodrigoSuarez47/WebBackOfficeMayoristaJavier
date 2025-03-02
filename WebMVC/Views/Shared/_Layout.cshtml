@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>@ViewData["Title"] - Gestión de Depósito</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Font Awesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/AppWeb.styles.css" asp-append-version="true" />
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        header {
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            font-size: 0.9rem;
+        }
+
+        /* Asegurando que el contenedor ocupe toda la altura disponible */
+        .flex-grow-1 {
+            flex-grow: 1;
+        }
+
+        /* Personalización del navbar para mejorar la visibilidad en dispositivos móviles */
+        .navbar-brand i {
+            margin-right: 8px;
+        }
+
+        .navbar-nav .nav-item {
+            margin-left: 15px;
+        }
+
+        .navbar-nav .nav-link {
+            padding-right: 15px;
+            padding-left: 15px;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+            <div class="container-fluid">
+                @if (Context.Session.GetString("Token") == null)
+                {
+                    <a class="navbar-brand" asp-area="" asp-controller="Usuarios" asp-action="Login">
+                        <i class="fas fa-store"></i> Mayorista Javier
+                    </a>
+                }
+                else
+                {
+                    <a class="navbar-brand" asp-area="" asp-controller="Articulos" asp-action="List">
+                        <i class="fas fa-store"></i> Mayorista Javier
+                    </a>
+                }
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                        aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        @if (Context.Session.GetString("Token") == null)
+                        {
+                            <li class="nav-item">
+                                <a class="btn btn-success text-white me-2" asp-area="" asp-controller="Usuarios" asp-action="Login">
+                                    <i class="fas fa-sign-in-alt"></i> Ingresar
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <a class="nav-link" asp-area="" asp-controller="Usuarios" asp-action="Index">
+                                <i class="fas fa-user"></i> Usuarios
+                            </a>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Articulos" asp-action="List">
+                                    <i class="fas fa-box"></i> Artículos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link disabled" asp-area="" asp-controller="Proveedor" asp-action="ListarProveedores">
+                                    <i class="fas fa-truck"></i> Proveedores
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link disabled" asp-area="" asp-controller="Pedido" asp-action="ListarPedidos">
+                                    <i class="fas fa-clipboard-list"></i> Pedidos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Usuarios" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-danger text-white">
+                                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container flex-grow-1 my-4">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="bg-light border-top py-3 mt-auto">
+        <div class="container text-center">
+            &copy; @DateTime.Now.Year <i class="fas fa-code"></i> Creado por Rodrigo Suárez
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

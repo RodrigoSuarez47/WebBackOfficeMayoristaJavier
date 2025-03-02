@@ -1,0 +1,123 @@
+﻿@model IEnumerable<DTOs.ArticuloDTO>
+
+@{
+    ViewData["Title"] = "Artículos";
+}
+
+<h1 class="text-center my-4"><i class="fas fa-box"></i> Listado de Artículos</h1>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <input type="text" id="searchString" class="form-control w-50 shadow-sm" placeholder="🔎 Buscar artículo..." />
+
+        <a class="btn btn-success shadow-sm" asp-action="Create">
+            <i class="fas fa-plus"></i> Agregar Artículo
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-striped table-bordered text-center shadow-sm rounded-3" id="articlesTable">
+            <thead class="table-dark">
+                <tr>
+                    <th onclick="sortTable(0, this)"><i class="fa-solid fa-hashtag"></i></th>
+                    <th><i class="fa-solid fa-image"></i></th>
+                    <th onclick="sortTable(2, this)">Nombre</th>
+                    <th onclick="sortTable(3, this)">Descripción</th>
+                    <th onclick="sortTable(4, this)"><i class="fa-solid fa-money-bill-transfer"></i>Compra</th>
+                    <th onclick="sortTable(5, this)"><i class="fa-solid fa-dollar-sign"></i>Mayor</th>
+                    <th onclick="sortTable(6, this)"><i class="fa-solid fa-dollar-sign"></i>Unidad</th>
+                    <th onclick="sortTable(7, this)"><i class="fa-solid fa-hand-holding-dollar"></i>Mínimo</th>
+                    <th onclick="sortTable(8, this)"><i class="fa-solid fa-dolly"></i> Stock</th>
+                    <th onclick="sortTable(9, this)"><i class="fa-solid fa-calendar-xmark"></i>Vencimiento</th>
+                    <th><i class="fa-solid fa-gears"></i>  Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="articlesBody">
+                @foreach (var item in Model)
+                {
+                    <tr class="align-middle">
+                        <td>@Html.DisplayFor(modelItem => item.Id)</td>
+                        <td>
+                            <img src="@item.ImageUrl" alt="Imagen de @item.Name" class="img-thumbnail rounded-3 shadow-sm" style="max-width: 80px; max-height: 80px;" />
+                        </td>
+                        <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Description)</td>
+                        <td class="text-end">@Html.DisplayFor(modelItem => item.PurchasePrice)</td>
+                        <td class="text-end">@Html.DisplayFor(modelItem => item.SalePrice)</td>
+                        <td class="text-end">@Html.DisplayFor(modelItem => item.SaleUnitPrice)</td>
+                        <td class="text-center">@Html.DisplayFor(modelItem => item.MinimumPurchase)</td>
+                        <td class="text-center">@Html.DisplayFor(modelItem => item.Stock)</td>
+                        <td class="text-center">@Html.DisplayFor(modelItem => item.ExpirationDate)</td>
+                        <td>
+                            <div class="btn-group">
+                                <a class="btn btn-sm btn-secondary shadow-sm" asp-action="Edit" asp-route-id="@item.Id">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <a class="btn btn-sm btn-danger shadow-sm" asp-action="Delete" asp-route-id="@item.Id">
+                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let lastSortedColumn = null;
+        let ascending = true;
+
+        function sortTable(columnIndex, header) {
+            var table = document.getElementById("articlesTable");
+            var tbody = table.getElementsByTagName("tbody")[0];
+            var rows = Array.from(tbody.getElementsByTagName("tr"));
+
+            // Alternar el orden de la columna seleccionada
+            if (lastSortedColumn === columnIndex) {
+                ascending = !ascending;
+            } else {
+                ascending = true;
+            }
+
+            rows.sort(function (a, b) {
+                var aText = a.cells[columnIndex].textContent.trim().toLowerCase();
+                var bText = b.cells[columnIndex].textContent.trim().toLowerCase();
+
+                if (!isNaN(parseFloat(aText)) && !isNaN(parseFloat(bText))) {
+                    return ascending ? aText - bText : bText - aText;
+                }
+                return ascending ? aText.localeCompare(bText) : bText.localeCompare(aText);
+            });
+
+            tbody.innerHTML = "";
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Resetear estilos de los otros encabezados
+            document.querySelectorAll("th").forEach(th => {
+                th.classList.remove("table-secondary");
+            });
+
+            // Resaltar la columna ordenada
+            header.classList.add("table-secondary");
+
+            lastSortedColumn = columnIndex;
+        }
+
+        // Filtrado de búsqueda optimizado
+        document.getElementById('searchString').addEventListener('input', function () {
+            var searchString = this.value.toLowerCase();
+            var articles = document.querySelectorAll('#articlesBody tr');
+
+            // Filtrar de forma eficiente sin recorrer todo el DOM constantemente
+            articles.forEach(function (article) {
+                var name = article.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                var description = article.querySelector('td:nth-child(4)').textContent.toLowerCase();
+
+                article.style.display = (name.includes(searchString) || description.includes(searchString)) ? '' : 'none';
+            });
+        });
+    </script>
+}

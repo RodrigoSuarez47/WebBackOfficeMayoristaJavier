@@ -1,0 +1,67 @@
+﻿@model DTOs.LoginDTO
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<!-- Cargar Font Awesome (opcional, si no usas Bootstrap Icons) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="card shadow-sm" style="max-width: 400px; width: 100%;">
+        <div class="card-body">
+            <h1 class="card-title text-center mb-4">Iniciar Sesión</h1>
+            <form asp-action="Login" method="post" id="loginForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <input asp-for="Name" class="form-control" placeholder="Ingrese su nombre de usuario" required />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input asp-for="Password" class="form-control" type="password" placeholder="Ingrese su contraseña" required />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100" id="loginButton">
+                    <i class="fas fa-sign-in-alt"></i> Ingresar
+                </button>
+
+                <div class="mt-3 text-center">
+                    <span id="loadingMessage" class="text-primary fw-bold" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Ingresando a la aplicación...
+                    </span>
+                </div>
+
+                @if (ViewBag.Mensaje != null)
+                {
+                    <div class="mt-3 text-center">
+                        <span class="text-danger">@ViewBag.Mensaje</span>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", function () {
+            let loginButton = document.getElementById("loginButton");
+            let loadingMessage = document.getElementById("loadingMessage");
+
+            loginButton.disabled = true;
+
+            loadingMessage.style.display = "block";
+
+            setTimeout(() => {
+                loadingMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando artículos...';
+            }, 1000);
+        });
+    </script>
+}

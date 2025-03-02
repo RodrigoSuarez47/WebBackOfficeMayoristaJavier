@@ -1,0 +1,58 @@
+﻿@model DTOs.UsuarioDTO
+
+@{
+    ViewData["Title"] = "Editar Usuario";
+}
+
+<h1 class="text-center my-4 text-primary"><i class="fas fa-edit"></i> Editar Usuario</h1>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg p-4">
+                <h4 class="text-center mb-3"><i class="fas fa-user"></i> Datos del Usuario</h4>
+                <hr />
+
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Id" class="form-label"><i class="fas fa-id-badge"></i> ID</label>
+                        <input asp-for="Id" class="form-control" readonly />
+                        <span asp-validation-for="Id" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Name" class="form-label"><i class="fas fa-user"></i> Nombre</label>
+                        <input asp-for="Name" class="form-control" placeholder="Ingrese el nombre" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Password" class="form-label"><i class="fas fa-lock"></i> Contraseña</label>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Ingrese la nueva contraseña" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="text-center mt-3">
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al listado
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,136 @@
+﻿@model DTOs.ArticuloDTO
+
+@{
+    ViewData["Title"] = "Agregar Artículo";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h2 class="card-title text-center mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Agregar Artículo
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3 disabled">
+                            <label asp-for="Id" class="form-label"><i class="fas fa-hashtag me-1"></i> Código</label>
+                            <input asp-for="Id" class="form-control" disabled/>
+                            <span asp-validation-for="Id" class="text-info">El código se genera automáticamente al guardar el articulo.</span>
+                        </div>
+
+                        <!-- Campo ImageUrl -->
+                        <div class="mb-3">
+                            <label asp-for="ImageUrl" class="form-label"><i class="fas fa-image me-1"></i> URL de la Imagen</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-link"></i></span>
+                                <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                            </div>
+                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                        </div>
+
+                        <!-- Campo Name -->
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label"><i class="fas fa-heading me-1"></i> Nombre</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                <input asp-for="Name" class="form-control" placeholder="Nombre del artículo" />
+                            </div>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <!-- Campo Description -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label"><i class="fas fa-align-left me-1"></i> Descripción</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-info-circle"></i></span>
+                                <input asp-for="Description" class="form-control" placeholder="Descripción breve" />
+                            </div>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Campo PurchasePrice -->
+                        <div class="mb-3">
+                            <label asp-for="PurchasePrice" class="form-label"><i class="fas fa-dollar-sign me-1"></i> Precio Compra</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-money-bill-wave"></i></span>
+                                <input asp-for="PurchasePrice" class="form-control" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="PurchasePrice" class="text-danger"></span>
+                        </div>
+
+                        <!-- Campo SalePrice -->
+                        <div class="mb-3">
+                            <label asp-for="SalePrice" class="form-label"><i class="fas fa-dollar-sign me-1"></i> Precio Venta</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-money-check-alt"></i></span>
+                                <input asp-for="SalePrice" class="form-control" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="SalePrice" class="text-danger"></span>
+                        </div>
+
+                        <!-- Campo SaleUnitPrice -->
+                        <div class="mb-3">
+                            <label asp-for="SaleUnitPrice" class="form-label"><i class="fas fa-dollar-sign me-1"></i> Precio Unitario</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-receipt"></i></span>
+                                <input asp-for="SaleUnitPrice" class="form-control" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="SaleUnitPrice" class="text-danger"></span>
+                        </div>
+
+                        <!-- Campo MinimumPurchase -->
+                        <div class="mb-3">
+                            <label asp-for="MinimumPurchase" class="form-label"><i class="fas fa-shopping-cart me-1"></i> Compra Mínima</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-sort-numeric-up-alt"></i></span>
+                                <input asp-for="MinimumPurchase" class="form-control" placeholder="Cantidad mínima" />
+                            </div>
+                            <span asp-validation-for="MinimumPurchase" class="text-danger"></span>
+                        </div>
+
+                        <!-- Campo Stock -->
+                        <div class="mb-3">
+                            <label asp-for="Stock" class="form-label"><i class="fas fa-boxes me-1"></i> Stock</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
+                                <input asp-for="Stock" class="form-control" placeholder="Cantidad disponible" />
+                            </div>
+                            <span asp-validation-for="Stock" class="text-danger"></span>
+                        </div>
+
+                        <!-- Campo ExpirationDate -->
+                        <div class="mb-3">
+                            <label asp-for="ExpirationDate" class="form-label"><i class="fas fa-calendar-alt me-1"></i> Fecha de Vencimiento</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
+                                <input asp-for="ExpirationDate" class="form-control" type="date" />
+                            </div>
+                            <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+                            <span class="text-info">Si el artículo no tiene fecha de vencimiento no seleccionar.</span>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Crear Artículo
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-3 text-center">
+                        <a asp-action="List" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver a la lista</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
