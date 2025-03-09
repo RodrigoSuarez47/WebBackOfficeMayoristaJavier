@@ -78,11 +78,11 @@
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label asp-for="SaleUnitPrice" class="form-label fw-bold">
+                    <label asp-for="UnitSalePrice" class="form-label fw-bold">
                         <i class="bi bi-cart-plus"></i> Precio por Unidad
                     </label>
-                    <input asp-for="SaleUnitPrice" class="form-control" placeholder="Precio por unidad" />
-                    <span asp-validation-for="SaleUnitPrice" class="text-danger"></span>
+                    <input asp-for="UnitSalePrice" class="form-control" placeholder="Precio por unidad" />
+                    <span asp-validation-for="UnitSalePrice" class="text-danger"></span>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -161,61 +161,58 @@
             }
         }
 
-        document.getElementById("editForm").addEventListener("submit", function (event) {
-            event.preventDefault();
+               document.getElementById("editForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // Esto evita el envío del formulario
 
             let nombre = document.querySelector('input[name="Name"]').value.trim();
             let descripcion = document.querySelector('input[name="Description"]').value.trim();
             let imageUrl = document.querySelector('input[name="ImageUrl"]').value.trim();
             let purchasePrice = parseFloat(document.querySelector('input[name="PurchasePrice"]').value);
             let salePrice = parseFloat(document.querySelector('input[name="SalePrice"]').value);
-            let unitPrice = parseFloat(document.querySelector('input[name="SaleUnitPrice"]').value);
+            let unitPrice = parseFloat(document.querySelector('input[name="UnitSalePrice"]').value);
             let minimumPurchase = parseFloat(document.querySelector('input[name="MinimumPurchase"]').value);
             let stock = parseFloat(document.querySelector('input[name="Stock"]').value);
             let expirationDate = document.querySelector('input[name="ExpirationDate"]').value;
 
-            let warningMessage = "";
-
             // Validaciones
             if (!nombre) {
                 Swal.fire("Error", "Debe ingresar el nombre del artículo.", "error");
-                return false;
+                return;
             }
             if (!descripcion) {
                 Swal.fire("Error", "Debe ingresar la descripción del artículo.", "error");
-                return false;
+                return;
             }
             if (!imageUrl) {
                 Swal.fire("Error", "Debe ingresar la URL de la imagen.", "error");
-                return false;
+                return;
             }
             if (!isValidUrl(imageUrl)) {
                 Swal.fire("Error", "La URL de la imagen no es válida.", "error");
-                return false;
+                return;
             }
             if (isNaN(purchasePrice) || purchasePrice <= 0) {
-                Swal.fire("Error", "Precio Compra debe ser mayor a 0.", "error");
-                return false;
+                Swal.fire("Error", "Precio de compra debe ser mayor a 0.", "error");
+                return;
             }
             if (isNaN(salePrice) || salePrice <= 0) {
-                Swal.fire("Error", "Precio Venta debe ser mayor a 0.", "error");
-                return false;
+                Swal.fire("Error", "Precio de venta debe ser mayor a 0.", "error");
+                return;
             }
             if (isNaN(unitPrice) || unitPrice <= 0) {
-                Swal.fire("Error", "Precio Unitario debe ser mayor a 0.", "error");
-                return false;
+                Swal.fire("Error", "Precio unitario debe ser mayor a 0.", "error");
+                return;
             }
             if (isNaN(minimumPurchase) || minimumPurchase <= 0) {
-                Swal.fire("Error", "Compra Mínima debe ser mayor a 0.", "error");
-                return false;
+                Swal.fire("Error", "Compra mínima debe ser mayor a 0.", "error");
+                return;
+            }
+            if (expirationDate && new Date(expirationDate) < new Date()) {
+                Swal.fire("Error", "Fecha de vencimiento no puede ser anterior a hoy.", "error");
+                return;
             }
 
-            if(expirationDate && new Date(expirationDate) < new Date()){
-                 Swal.fire("Error", "Fecha de Vencimiento anterior a hoy. El artículo está vencido", "error");
-                return false;
-            }
-
-            // Acumular advertencias (no impiden el envío)
+            // Advertencias
             let warnings = [];
             if (isNaN(stock) || stock === 0) {
                 warnings.push("El stock ingresado es 0.");
@@ -224,9 +221,8 @@
                 warnings.push("No ingresó fecha de vencimiento.");
             }
 
-            // Si hay advertencias, mostrar confirmación
+            // Si hay advertencias, mostrar alerta de confirmación
             if (warnings.length > 0) {
-                event.preventDefault();
                 Swal.fire({
                     icon: 'warning',
                     title: 'Advertencia',
@@ -237,23 +233,36 @@
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Éxito',
-                            text: 'Artículo editado exitosamente.',
-                            confirmButtonColor: "#198754"
-                        }).then(() => {
-                            event.target.submit();
-                        });
+                        enviarFormulario();
                     }
                 });
+            } else {
+                enviarFormulario();
+            }
+        });
+
+        // Función para enviar el formulario
+        function enviarFormulario() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Artículo editado exitosamente.',
+                confirmButtonColor: "#198754"
+            }).then(() => {
+                document.getElementById("editForm").submit(); // Aquí se envía el formulario
+            });
+        }
+
+        // Función para verificar si la URL es válida
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
                 return false;
             }
+        }
 
-            // Enviar el formulario si todo está correcto
-            event.target.submit();
-
-        });
 
         // Verificar URL válida
         function isValidUrl(string) {

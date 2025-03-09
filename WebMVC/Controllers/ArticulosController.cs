@@ -27,13 +27,6 @@ public class ArticulosController : Controller
     private HttpClient ConfigureClient()
     {
         var client = _httpClientFactory.CreateClient();
-        var token = HttpContext.Session.GetString("Token");
-
-        if (!string.IsNullOrEmpty(token))
-        {
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", token);
-        }
-
         return client;
     }
 

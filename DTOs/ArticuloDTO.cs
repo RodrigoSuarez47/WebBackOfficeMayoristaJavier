@@ -30,7 +30,7 @@ namespace DTOs
         public decimal SalePrice { get; set; }
 
         [Display(Name = "Precio Unitario")]
-        public decimal SaleUnitPrice { get; set; }
+        public decimal UnitSalePrice { get; set; }
 
         [Display(Name = "Mínimo de Compra")]
         [Required(ErrorMessage = "El Mínimo de Compra es obligatorio.")]
