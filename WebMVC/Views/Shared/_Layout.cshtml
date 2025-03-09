@@ -3,64 +3,35 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>@ViewData["Title"] - Gestión de Depósito</title>
+    <title>@ViewData["Title"] - Mayorista Javier</title>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-    <!-- Font Awesome para íconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Bootstrap Icons y Animate.css -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 
+    <!-- Custom CSS (para reglas adicionales, ej: scroll-behavior si lo requieres) -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/AppWeb.styles.css" asp-append-version="true" />
-
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-
-        header {
-            margin-bottom: 1rem;
-        }
-
-        footer {
-            font-size: 0.9rem;
-        }
-
-        /* Asegurando que el contenedor ocupe toda la altura disponible */
-        .flex-grow-1 {
-            flex-grow: 1;
-        }
-
-        /* Personalización del navbar para mejorar la visibilidad en dispositivos móviles */
-        .navbar-brand i {
-            margin-right: 8px;
-        }
-
-        .navbar-nav .nav-item {
-            margin-left: 15px;
-        }
-
-        .navbar-nav .nav-link {
-            padding-right: 15px;
-            padding-left: 15px;
-        }
-    </style>
 </head>
-<body class="d-flex flex-column min-vh-100">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+<body class="d-flex flex-column min-vh-100 bg-light">
+    <header class="animate__animated animate__fadeInDown">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-transparent shadow-sm fixed-top">
             <div class="container-fluid">
                 @if (Context.Session.GetString("Token") == null)
                 {
-                    <a class="navbar-brand" asp-area="" asp-controller="Usuarios" asp-action="Login">
-                        <i class="fas fa-store"></i> Mayorista Javier
+                    <a class="navbar-brand fw-bold text-black" asp-area="" asp-controller="Usuarios" asp-action="Login">
+                        <i class="bi bi-shop-window"></i> Mayorista Javier
                     </a>
                 }
                 else
                 {
-                    <a class="navbar-brand" asp-area="" asp-controller="Articulos" asp-action="List">
-                        <i class="fas fa-store"></i> Mayorista Javier
+                    <a class="navbar-brand fw-bold text-black" asp-area="" asp-controller="Articulos" asp-action="List">
+                        <i class="bi bi-shop-window"></i> Mayorista Javier
                     </a>
                 }
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
@@ -72,35 +43,37 @@
                         @if (Context.Session.GetString("Token") == null)
                         {
                             <li class="nav-item">
-                                <a class="btn btn-success text-white me-2" asp-area="" asp-controller="Usuarios" asp-action="Login">
-                                    <i class="fas fa-sign-in-alt"></i> Ingresar
+                                <a class="btn btn-outline-success me-2" asp-area="" asp-controller="Usuarios" asp-action="Login">
+                                    <i class="bi bi-box-arrow-in-right"></i> Ingresar
                                 </a>
                             </li>
                         }
                         else
                         {
-                            <a class="nav-link" asp-area="" asp-controller="Usuarios" asp-action="Index">
-                                <i class="fas fa-user"></i> Usuarios
-                            </a>
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Articulos" asp-action="List">
-                                    <i class="fas fa-box"></i> Artículos
+                                <a class="nav-link text-secondary" asp-area="" asp-controller="Articulos" asp-action="List">
+                                    <i class="bi bi-box-seam"></i> Artículos
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link disabled" asp-area="" asp-controller="Proveedor" asp-action="ListarProveedores">
-                                    <i class="fas fa-truck"></i> Proveedores
+                                <a class="nav-link text-secondary" asp-area="" asp-controller="Proveedores" asp-action="Index">
+                                    <i class="bi bi-truck"></i> Proveedores
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link disabled" asp-area="" asp-controller="Pedido" asp-action="ListarPedidos">
-                                    <i class="fas fa-clipboard-list"></i> Pedidos
+                                <a class="nav-link text-secondary" asp-area="" asp-controller="Pedidos" asp-action="Index">
+                                    <i class="bi bi-clipboard-check"></i> Pedidos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-secondary" asp-area="" asp-controller="Usuarios" asp-action="Index">
+                                    <i class="bi bi-person-circle"></i> Usuarios
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <form asp-controller="Usuarios" asp-action="Logout" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-danger text-white">
-                                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                                    <button type="submit" class="btn btn-outline-danger ms-2 logout-btn" >
+                                        <i class="bi bi-box-arrow-left"></i> Salir
                                     </button>
                                 </form>
                             </li>
@@ -111,21 +84,65 @@
         </nav>
     </header>
 
-    <div class="container flex-grow-1 my-4">
+    <!-- Agregamos pt-5 para compensar el navbar fixed -->
+    <div class="container flex-grow-1 my-5 pt-5 animate__animated animate__fadeIn">
         <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="bg-light border-top py-3 mt-auto">
+    <footer class="bg-dark text-white py-3 mt-auto animate__animated animate__fadeInUp">
         <div class="container text-center">
-            &copy; @DateTime.Now.Year <i class="fas fa-code"></i> Creado por Rodrigo Suárez
+            &copy; @DateTime.Now.Year <i class="bi bi-code-slash"></i> Creado por Rodrigo Suárez
         </div>
     </footer>
 
+    <!-- Botón Scroll-to-Top: se posiciona con clases de Bootstrap -->
+    <button class="btn btn-primary position-fixed bottom-0 end-0 m-3 d-none animate__animated" id="scrollTopBtn" data-bs-toggle="tooltip" data-bs-placement="left" title="Subir">
+        <i class="bi bi-arrow-up-circle"></i>
+    </button>
+
+    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // Inicializar tooltips de Bootstrap
+        document.addEventListener("DOMContentLoaded", function () {
+          var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+          tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+          });
+
+          // Animación para botón de cerrar sesión
+          const logoutButton = document.querySelector(".logout-btn");
+          if (logoutButton) {
+            logoutButton.addEventListener("mouseenter", function () {
+              this.classList.add("animate__pulse");
+            });
+            logoutButton.addEventListener("mouseleave", function () {
+              this.classList.remove("animate__pulse");
+            });
+          }
+        });
+
+        // Mostrar/ocultar botón "scroll-to-top" utilizando clases de Bootstrap
+        const scrollTopBtn = document.getElementById("scrollTopBtn");
+        window.addEventListener("scroll", function() {
+          if (window.scrollY > 300) {
+            scrollTopBtn.classList.remove("d-none");
+          } else {
+            scrollTopBtn.classList.add("d-none");
+          }
+        });
+
+        // Animación de scroll al hacer clic
+        scrollTopBtn.addEventListener("click", function() {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -13,11 +13,22 @@ namespace WebMVC.Controllers
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _urlApi;
-
         public UsuariosController(IHttpClientFactory httpClientFactory, IConfiguration config)
         {
             _httpClientFactory = httpClientFactory;
             _urlApi = config.GetValue<string>("UrlAPI") + "Users";
+        }
+        private HttpClient ConfigureClient()
+        {
+            var client = _httpClientFactory.CreateClient();
+            var token = HttpContext.Session.GetString("Token");
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
+            return client;
         }
 
         [HttpGet]
@@ -25,7 +36,7 @@ namespace WebMVC.Controllers
         {
             try
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 using var response = await client.GetAsync(_urlApi);
 
                 if (response.IsSuccessStatusCode)
@@ -50,7 +61,7 @@ namespace WebMVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 using var response = await client.PostAsJsonAsync($"{_urlApi}/AddUser", usuario);
 
                 if (response.IsSuccessStatusCode)
@@ -66,7 +77,7 @@ namespace WebMVC.Controllers
         {
             try
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 using var response = await client.GetAsync($"{_urlApi}/GetUserById/{id}");
 
                 if (response.IsSuccessStatusCode)
@@ -88,7 +99,7 @@ namespace WebMVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 using var response = await client.PutAsJsonAsync($"{_urlApi}/UpdateUser/{usuario.Id}", usuario);
 
                 if (response.IsSuccessStatusCode)
@@ -99,34 +110,12 @@ namespace WebMVC.Controllers
             return View(usuario);
         }
 
-        [HttpGet]
+        [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                var client = _httpClientFactory.CreateClient();
-                using var response = await client.GetAsync($"{_urlApi}/GetUserById/{id}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var usuario = JsonConvert.DeserializeObject<UsuarioDTO>(await response.Content.ReadAsStringAsync());
-                    return View(usuario);
-                }
-            }
-            catch
-            {
-                ViewBag.Mensaje = "Error al obtener el usuario.";
-            }
-
-            return RedirectToAction("Index");
-        }
-
-        [HttpPost, ActionName("Delete")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            try
-            {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 using var response = await client.DeleteAsync($"{_urlApi}/DeleteUser/{id}");
 
                 if (response.IsSuccessStatusCode)
@@ -152,7 +141,7 @@ namespace WebMVC.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var client = _httpClientFactory.CreateClient();
+                    var client = ConfigureClient();
                     using var response = await client.PostAsJsonAsync($"{_urlApi}/Login", usuario);
 
                     var cuerpo = await response.Content.ReadAsStringAsync();
@@ -162,6 +151,9 @@ namespace WebMVC.Controllers
                         if (usuarioLogueado != null)
                         {
                             HttpContext.Session.SetString("Token", usuarioLogueado.Token);
+                            HttpContext.Session.SetString("Nombre", usuarioLogueado.Name);
+                            Console.WriteLine("Token: " + HttpContext.Session.GetString("Token"));
+
                             return RedirectToAction("List", "Articulos");
                         }
                         ViewBag.Mensaje = "Email o Contraseña incorrectos";
@@ -185,7 +177,6 @@ namespace WebMVC.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public IActionResult Logout()
         {
             try

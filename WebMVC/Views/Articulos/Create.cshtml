@@ -1,136 +1,321 @@
 ﻿@model DTOs.ArticuloDTO
+@Html.AntiForgeryToken()
 
 @{
     ViewData["Title"] = "Agregar Artículo";
 }
 
-<div class="container my-5">
+<h1 class="text-center my-4 animate__animated animate__fadeInDown">
+    <i class="bi bi-plus-lg"></i> Agregar Artículo
+</h1>
+
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-12 col-sm-10 col-md-8 col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h2 class="card-title text-center mb-0">
-                        <i class="fas fa-plus-circle me-2"></i>Agregar Artículo
-                    </h2>
-                </div>
-                <div class="card-body">
-                    <form asp-action="Create" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg p-4 animate__animated animate__zoomIn">
+                <h4 class="text-center mb-3">
+                    <i class="bi bi-card-list"></i> Detalles del Artículo
+                </h4>
+                <hr />
+                <form asp-action="Create" method="post" onsubmit="return validarFormulario(event);">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                        <div class="mb-3 disabled">
-                            <label asp-for="Id" class="form-label"><i class="fas fa-hashtag me-1"></i> Código</label>
-                            <input asp-for="Id" class="form-control" disabled/>
-                            <span asp-validation-for="Id" class="text-info">El código se genera automáticamente al guardar el articulo.</span>
+                    <!-- Campo Código -->
+                    <div class="mb-3">
+                        <label asp-for="Id" class="form-label">
+                            <i class="bi bi-hash me-1"></i> Código
+                        </label>
+                        <input asp-for="Id" class="form-control" disabled />
+                        <small class="text-info">Se genera automáticamente.</small>
+                    </div>
+
+                    <!-- Vista previa de imagen -->
+                    <div class="mb-3 text-center">
+                        <div id="imagePreview" class="mb-3">
+                            <img src="@Model.ImageUrl" alt="Imagen del Artículo"
+                                 class="img-fluid rounded shadow-sm"
+                                 style="max-width: 150px; max-height: 150px; object-fit: contain; display: none;" />
                         </div>
+                    </div>
 
-                        <!-- Campo ImageUrl -->
-                        <div class="mb-3">
-                            <label asp-for="ImageUrl" class="form-label"><i class="fas fa-image me-1"></i> URL de la Imagen</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-link"></i></span>
-                                <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
-                            </div>
-                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                    <!-- URL de la imagen -->
+                    <div class="mb-3">
+                        <label asp-for="ImageUrl" class="form-label">
+                            <i class="bi bi-image me-1"></i> URL de la Imagen
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-link"></i>
+                            </span>
+                            <input asp-for="ImageUrl" class="form-control" placeholder="https://..." oninput="loadImage()" />
                         </div>
+                        <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                    </div>
 
-                        <!-- Campo Name -->
-                        <div class="mb-3">
-                            <label asp-for="Name" class="form-label"><i class="fas fa-heading me-1"></i> Nombre</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                                <input asp-for="Name" class="form-control" placeholder="Nombre del artículo" />
-                            </div>
+                    <!-- Nombre y Descripción -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Name" class="form-label">
+                                <i class="bi bi-tag me-1"></i> Nombre
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="Nombre del artículo" />
                             <span asp-validation-for="Name" class="text-danger"></span>
                         </div>
-
-                        <!-- Campo Description -->
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label"><i class="fas fa-align-left me-1"></i> Descripción</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-info-circle"></i></span>
-                                <input asp-for="Description" class="form-control" placeholder="Descripción breve" />
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="bi bi-card-text me-1"></i> Descripción
+                            </label>
+                            <input asp-for="Description" class="form-control" placeholder="Descripción breve" />
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <!-- Campo PurchasePrice -->
-                        <div class="mb-3">
-                            <label asp-for="PurchasePrice" class="form-label"><i class="fas fa-dollar-sign me-1"></i> Precio Compra</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-money-bill-wave"></i></span>
-                                <input asp-for="PurchasePrice" class="form-control" placeholder="0.00" />
-                            </div>
+                    <!-- Precio Compra y Precio Venta -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PurchasePrice" class="form-label">
+                                <i class="bi bi-cash me-1"></i> Precio Compra
+                            </label>
+                            <input asp-for="PurchasePrice" class="form-control" placeholder="0.00" />
                             <span asp-validation-for="PurchasePrice" class="text-danger"></span>
                         </div>
-
-                        <!-- Campo SalePrice -->
-                        <div class="mb-3">
-                            <label asp-for="SalePrice" class="form-label"><i class="fas fa-dollar-sign me-1"></i> Precio Venta</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-money-check-alt"></i></span>
-                                <input asp-for="SalePrice" class="form-control" placeholder="0.00" />
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SalePrice" class="form-label">
+                                <i class="bi bi-cash-coin me-1"></i> Precio Venta
+                            </label>
+                            <input asp-for="SalePrice" class="form-control" placeholder="0.00" />
                             <span asp-validation-for="SalePrice" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <!-- Campo SaleUnitPrice -->
-                        <div class="mb-3">
-                            <label asp-for="SaleUnitPrice" class="form-label"><i class="fas fa-dollar-sign me-1"></i> Precio Unitario</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-receipt"></i></span>
-                                <input asp-for="SaleUnitPrice" class="form-control" placeholder="0.00" />
-                            </div>
+                    <!-- Precio Unitario y Compra Mínima -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SaleUnitPrice" class="form-label">
+                                <i class="bi bi-receipt me-1"></i> Precio Unitario
+                            </label>
+                            <input asp-for="SaleUnitPrice" class="form-control" placeholder="0.00" />
                             <span asp-validation-for="SaleUnitPrice" class="text-danger"></span>
                         </div>
-
-                        <!-- Campo MinimumPurchase -->
-                        <div class="mb-3">
-                            <label asp-for="MinimumPurchase" class="form-label"><i class="fas fa-shopping-cart me-1"></i> Compra Mínima</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-sort-numeric-up-alt"></i></span>
-                                <input asp-for="MinimumPurchase" class="form-control" placeholder="Cantidad mínima" />
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="MinimumPurchase" class="form-label">
+                                <i class="bi bi-cart me-1"></i> Compra Mínima
+                            </label>
+                            <input asp-for="MinimumPurchase" class="form-control" placeholder="Cantidad mínima" />
                             <span asp-validation-for="MinimumPurchase" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <!-- Campo Stock -->
-                        <div class="mb-3">
-                            <label asp-for="Stock" class="form-label"><i class="fas fa-boxes me-1"></i> Stock</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
-                                <input asp-for="Stock" class="form-control" placeholder="Cantidad disponible" />
-                            </div>
+                    <!-- Stock y Fecha de Vencimiento -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Stock" class="form-label">
+                                <i class="bi bi-boxes me-1"></i> Stock
+                            </label>
+                            <input asp-for="Stock" class="form-control" placeholder="Cantidad disponible" />
                             <span asp-validation-for="Stock" class="text-danger"></span>
                         </div>
-
-                        <!-- Campo ExpirationDate -->
-                        <div class="mb-3">
-                            <label asp-for="ExpirationDate" class="form-label"><i class="fas fa-calendar-alt me-1"></i> Fecha de Vencimiento</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-calendar-day"></i></span>
-                                <input asp-for="ExpirationDate" class="form-control" type="date" />
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ExpirationDate" class="form-label">
+                                <i class="bi bi-calendar me-1"></i> Fecha de Vencimiento
+                            </label>
+                            <input asp-for="ExpirationDate" class="form-control" type="date" />
                             <span asp-validation-for="ExpirationDate" class="text-danger"></span>
-                            <span class="text-info">Si el artículo no tiene fecha de vencimiento no seleccionar.</span>
+                            <small class="text-info">Si no aplica, déjelo vacío.</small>
                         </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save me-1"></i> Crear Artículo
-                            </button>
-                        </div>
-                    </form>
-                    <div class="mt-3 text-center">
-                        <a asp-action="List" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver a la lista</a>
                     </div>
-                </div>
+
+                    <!-- Venta por Peso -->
+                    <div class="mb-3 form-check">
+                        <input asp-for="IsSoldByWeight" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label" for="IsSoldByWeight">
+                            <i class="bi bi-weight me-1"></i> Venta por Peso
+                        </label>
+                    </div>
+
+                    <!-- Visibilidad -->
+                    <div class="mb-3 form-check">
+                        <input asp-for="IsVisible" class="form-check-input" type="checkbox" checked/>
+                        <label class="form-check-label" for="IsVisible">
+                            <i class="bi bi-weight me-1"></i> Visible para Clientes
+                        </label>
+                    </div>
+
+                    <!-- Botón de envío -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-outline-success w-100 animate__animated animate__fadeInUp">
+                            <i class="bi bi-plus-lg"></i> Agregar Artículo
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
+<div class="text-center mt-3 animate__animated animate__fadeInUp">
+    <a asp-action="List" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+</div>
+
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        function validarFormulario(event) {
+            // Obtener valores
+            let nombre = document.querySelector('input[name="Name"]').value.trim();
+            let descripcion = document.querySelector('input[name="Description"]').value.trim();
+            let imageUrl = document.querySelector('input[name="ImageUrl"]').value.trim();
+            let purchasePrice = parseFloat(document.querySelector('input[name="PurchasePrice"]').value);
+            let salePrice = parseFloat(document.querySelector('input[name="SalePrice"]').value);
+            let unitPrice = parseFloat(document.querySelector('input[name="SaleUnitPrice"]').value);
+            let minimumPurchase = parseFloat(document.querySelector('input[name="MinimumPurchase"]').value);
+            let stock = parseFloat(document.querySelector('input[name="Stock"]').value);
+            let expirationDate = document.querySelector('input[name="ExpirationDate"]').value;
+
+            // Validaciones críticas
+            if (!nombre) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Debe ingresar el nombre del artículo.",
+                    confirmButtonColor: "#198754"
+                });
+                return false;
+            }
+            if (!descripcion) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Debe ingresar la descripción del artículo.",
+                    confirmButtonColor: "#198754"
+                });
+                return false;
+            }
+            if (!imageUrl) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Debe ingresar la URL de la imagen.",
+                    confirmButtonColor: "#198754"
+                });
+                return false;
+            }
+            if (!isValidUrl(imageUrl)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "La URL de la imagen no es válida.",
+                    confirmButtonColor: "#198754"
+                });
+                return false;
+            }
+            if (isNaN(purchasePrice) || purchasePrice <= 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Precio Compra debe ser mayor a 0.",
+                    confirmButtonColor: "#198754"
+                });
+                return false;
+            }
+            if (isNaN(salePrice) || salePrice <= 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Precio Venta debe ser mayor a 0.",
+                    confirmButtonColor: "#198754"
+                });
+                return false;
+            }
+            if (isNaN(unitPrice) || unitPrice <= 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Precio Unitario debe ser mayor a 0.",
+                    confirmButtonColor: "#198754"
+                });
+                return false;
+            }
+            if (isNaN(minimumPurchase) || minimumPurchase <= 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Compra Mínima debe ser mayor a 0.",
+                    confirmButtonColor: "#198754"
+                });
+                return false;
+            }
+
+            // Acumular advertencias (no impiden el envío)
+            let warnings = [];
+            if (isNaN(stock) || stock === 0) {
+                warnings.push("El stock ingresado es 0.");
+            }
+            if (!expirationDate) {
+                warnings.push("No ingresó fecha de vencimiento.");
+            }
+
+            // Si hay advertencias, mostrar confirmación
+            if (warnings.length > 0) {
+                event.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Advertencia',
+                    html: warnings.join('<br>') + '<br><br>¿Desea continuar de todas formas?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, continuar',
+                    confirmButtonColor: "#198754",
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: 'Artículo agregado exitosamente.',
+                            confirmButtonColor: "#198754"
+                        }).then(() => {
+                            event.target.submit();
+                        });
+                    }
+                });
+                return false;
+            }
+
+            return true;
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function loadImage() {
+            var imageUrl = document.querySelector('input[name="ImageUrl"]').value;
+            var img = document.querySelector('#imagePreview img');
+
+            img.src = imageUrl;
+            img.style.display = 'block';
+            img.onerror = function () {
+                img.style.display = 'none';
+                Swal.fire("Error", "No se pudo cargar la imagen. Verifique la URL.", "error");
+            };
+        }
+    </script>
 }

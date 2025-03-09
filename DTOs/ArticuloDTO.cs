@@ -40,16 +40,12 @@ namespace DTOs
         [Display(Name = "Stock")]
         [Required(ErrorMessage = "El Stock es obligatorio.")]
         public int Stock { get; set; }
-
         [Display(Name = "Vencimiento")]
         public DateTime? ExpirationDate { get; set; }
+        public ProveedorDTO? Supplier { get; set; }
+        [Display(Name = "Visible")]
+        public bool IsVisible { get; set; }
+        [Display(Name = "Venta por Peso")]
+        public bool IsSoldByWeight { get; set; }
     }
-
-
-    public class ValorWrapper
-{
-    [Required(ErrorMessage = "El campo es obligatorio.")]
-    public string Valor { get; set; }
-}
-
 }

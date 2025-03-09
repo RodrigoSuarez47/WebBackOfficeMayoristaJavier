@@ -21,8 +21,20 @@ public class ArticulosController : Controller
     {
         _httpClientFactory = httpClientFactory;
         _memoryCache = memoryCache;
-        // Asegúrate de que la URL incluya la barra final
         UrlApi = config.GetValue<string>("UrlAPI") + "Article/";
+    }
+
+    private HttpClient ConfigureClient()
+    {
+        var client = _httpClientFactory.CreateClient();
+        var token = HttpContext.Session.GetString("Token");
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", token);
+        }
+
+        return client;
     }
 
     private async Task<T> GetApiResponse<T>(string endpoint, string cacheKey = null, TimeSpan? cacheDuration = null)
@@ -36,7 +48,7 @@ public class ArticulosController : Controller
 
         try
         {
-            var client = _httpClientFactory.CreateClient();
+            var client = ConfigureClient();
             var respuesta = await client.GetAsync(UrlApi + endpoint).ConfigureAwait(false);
 
             if (respuesta.IsSuccessStatusCode)
@@ -66,7 +78,7 @@ public class ArticulosController : Controller
     {
         try
         {
-            var client = _httpClientFactory.CreateClient();
+            var client = ConfigureClient();
             var requestMessage = new HttpRequestMessage(method, UrlApi + endpoint)
             {
                 Content = data != null ? new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json") : null
@@ -102,11 +114,13 @@ public class ArticulosController : Controller
         return View();
     }
 
+
     // GET: ArticulosController/Create
     public ActionResult Create()
     {
-        return View(); // Devuelve la vista para crear un artículo
+        return View(new ArticuloDTO()); // Devuelve la vista para crear un artículo
     }
+
 
     // POST: ArticulosController/Create
     [HttpPost]
@@ -121,7 +135,6 @@ public class ArticulosController : Controller
         ViewBag.Mensaje = "Error al crear el artículo: " + errorMessage;
         return View(articulo); // Vuelve a la vista con los datos ingresados, para que el usuario corrija errores
     }
-
 
     // GET: ArticulosController/Edit/5
     public async Task<ActionResult> Edit(int id)
@@ -149,21 +162,11 @@ public class ArticulosController : Controller
         ViewBag.Mensaje = "Error al actualizar el artículo: " + errorMessage;
         return View(articulo);
     }
-    // GET: ArticulosController/Delete/5
-    public async Task<ActionResult> Delete(int id)
-    {
-        var articulo = await GetApiResponse<ArticuloDTO>(id.ToString(), $"Articulo_{id}", TimeSpan.FromMinutes(30)).ConfigureAwait(false);
-        if (articulo != null)
-        {
-            return View(articulo);
-        }
-        ViewBag.Mensaje = "No se pudo obtener el artículo para eliminar.";
-        return RedirectToAction(nameof(List));
-    }
+   
 
-    // POST: ArticulosController/DeleteConfirmado/5
+    // POST: ArticulosController/Delete/5
     [HttpPost]
-    public async Task<ActionResult> DeleteConfirmado(int id)
+    public async Task<ActionResult> Delete(int id)
     {
         try
         {

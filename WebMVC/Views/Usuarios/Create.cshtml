@@ -1,34 +1,48 @@
 ﻿@model DTOs.UsuarioDTO
+@Html.AntiForgeryToken()
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Agregar Usuario";
 }
 
-<h1 class="text-center my-4">Crear Usuario</h1>
+<h1 class="text-center my-4 animate__animated animate__fadeInDown">
+    <i class="bi bi-person-plus-fill"></i> Agregar Usuario
+</h1>
 
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card shadow-lg p-4">
-                <h4 class="text-center mb-3">Detalles del Usuario</h4>
+            <div class="card shadow-lg p-4 animate__animated animate__zoomIn">
+                <h4 class="text-center mb-3"><i class="bi bi-card-list"></i> Detalles del Usuario</h4>
                 <hr />
-                <form asp-action="Create">
+                <form asp-action="Create" id="userForm">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                    <div class="form-group mb-3">
-                        <label asp-for="Name" class="form-label"><i class="fas fa-user"></i> Nombre</label>
-                        <input asp-for="Name" class="form-control" placeholder="Ingrese su nombre" />
+                    <!-- Nombre -->
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"><i class="bi bi-person"></i> Nombre</label>
+                        <input asp-for="Name" class="form-control" placeholder="Ingrese su nombre" required />
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label asp-for="Password" class="form-label"><i class="fas fa-lock"></i> Contraseña</label>
-                        <input asp-for="Password" type="password" class="form-control" placeholder="Ingrese su contraseña" />
+                    <!-- Contraseña -->
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"><i class="bi bi-lock"></i> Contraseña</label>
+                        <div class="input-group">
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Ingrese su contraseña" id="passwordField" required />
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">La contraseña debe tener al menos 8 caracteres, un número y una letra.</small>
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group text-center">
-                        <button type="submit" class="btn btn-success w-100"><i class="fas fa-save"></i> Crear</button>
+                    <!-- Botón Agregar -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-outline-success w-100 animate__animated animate__fadeInUp" id="submitBtn">
+                            <i class="bi bi-person-plus"></i> Agregar
+                        </button>
                     </div>
                 </form>
             </div>
@@ -36,12 +50,92 @@
     </div>
 </div>
 
-<div class="text-center mt-3">
-    <a asp-action="Index" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver a la lista</a>
+<div class="text-center mt-3 animate__animated animate__fadeInUp">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        // Mostrar/ocultar contraseña
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordField = document.getElementById("passwordField");
+            const togglePassword = document.getElementById("togglePassword");
+
+            togglePassword.addEventListener("click", function () {
+                if (passwordField.type === "password") {
+                    passwordField.type = "text";
+                    togglePassword.innerHTML = '<i class="bi bi-eye-slash"></i>';
+                } else {
+                    passwordField.type = "password";
+                    togglePassword.innerHTML = '<i class="bi bi-eye"></i>';
+                }
+            });
+
+            // Validación personalizada para la contraseña
+            document.getElementById("userForm").addEventListener("submit", function (event) {
+                var password = document.querySelector('input[name="Password"]').value;
+                var name = document.querySelector('input[name="Name"]').value;
+
+                var errors = [];
+
+                // Validación de campos vacíos
+                if (!name || !password) {
+                    errors.push("Ingrese Nombre y Contraseña");
+                }
+
+                // Si hay errores por campos vacíos, mostrar alerta
+                if (errors.length > 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '',
+                        text: errors,
+                    });
+                    event.preventDefault();
+                    return false; // Detener el envío del formulario
+                }
+
+                // Si ambos campos tienen datos, validamos la contraseña
+                errors = [];
+
+                // 1. Longitud mínima de 8 caracteres
+                if (password.length < 8) {
+                    errors.push("La contraseña debe tener al menos 8 caracteres.");
+                }
+
+                // 2. Al menos un número
+                if (!/\d/.test(password)) {
+                    errors.push("La contraseña debe contener al menos un número.");
+                }
+
+                // 3. Al menos una letra
+                if (!/[a-zA-Z]/.test(password)) {
+                    errors.push("La contraseña debe contener al menos una letra.");
+                }
+
+                // Mostrar errores de validación de contraseña
+                if (errors.length > 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Contraseña no válida',
+                        text: errors.join(" "),
+                    });
+                    event.preventDefault();
+                    return false;
+                }
+
+                // Si no hay errores, deshabilitar botón de submit
+                var submitButton = document.getElementById("submitBtn");
+                submitButton.disabled = true;
+
+                // Habilitar botón después de 5 segundos
+                setTimeout(function () {
+                    submitButton.disabled = false;
+                }, 5000);
+            });
+        });
+    </script>
 }

@@ -4,47 +4,60 @@
     ViewData["Title"] = "Editar Usuario";
 }
 
-<h1 class="text-center my-4 text-primary"><i class="fas fa-edit"></i> Editar Usuario</h1>
+<h1 class="text-center my-4 animate__animated animate__fadeInDown">
+    <i class="bi bi-pencil-square"></i> Editar Usuario
+</h1>
 
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card shadow-lg p-4">
-                <h4 class="text-center mb-3"><i class="fas fa-user"></i> Datos del Usuario</h4>
+            <div class="card shadow-lg p-4 animate__animated animate__zoomIn">
+                <h4 class="text-center mb-3"><i class="bi bi-person"></i> Datos del Usuario</h4>
                 <hr />
 
-                <form asp-action="Edit">
+                <form asp-action="Edit" id="editUserForm">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                    <div class="form-group mb-3">
-                        <label asp-for="Id" class="form-label"><i class="fas fa-id-badge"></i> ID</label>
+                    <!-- ID -->
+                    <div class="mb-3">
+                        <label asp-for="Id" class="form-label"><i class="bi bi-person-badge"></i> ID</label>
                         <input asp-for="Id" class="form-control" readonly />
                         <span asp-validation-for="Id" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label asp-for="Name" class="form-label"><i class="fas fa-user"></i> Nombre</label>
-                        <input asp-for="Name" class="form-control" placeholder="Ingrese el nombre" />
+                    <!-- Nombre -->
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"><i class="bi bi-person"></i> Nombre</label>
+                        <input asp-for="Name" class="form-control" placeholder="Ingrese el nombre" required />
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label asp-for="Password" class="form-label"><i class="fas fa-lock"></i> Contraseña</label>
-                        <input asp-for="Password" type="password" class="form-control" placeholder="Ingrese la nueva contraseña" />
+                    <!-- Contraseña -->
+                    <div class="mb-3 position-relative">
+                        <label asp-for="Password" class="form-label"><i class="bi bi-lock"></i> Contraseña</label>
+                        <div class="input-group">
+                            <input asp-for="Password" id="passwordInput" type="password" class="form-control" placeholder="Ingrese la nueva contraseña" />
+                            <button type="button" class="btn btn-outline-secondary toggle-password" data-bs-toggle="tooltip" data-bs-placement="top" title="Mostrar/Ocultar Contraseña">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">La contraseña debe tener al menos 8 caracteres, un número y una letra.</small>
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
 
+                    <!-- Botón Guardar -->
                     <div class="text-center">
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="fas fa-save"></i> Guardar Cambios
+                        <button type="submit" class="btn btn-outline-success w-100 save-btn animate__animated animate__fadeInUp">
+                            <i class="bi bi-save"></i> Guardar Cambios
                         </button>
                     </div>
                 </form>
             </div>
 
-            <div class="text-center mt-3">
+            <!-- Volver -->
+            <div class="text-center mt-3 animate__animated animate__fadeInUp">
                 <a asp-action="Index" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Volver al listado
+                    <i class="bi bi-arrow-left"></i> Volver
                 </a>
             </div>
         </div>
@@ -52,7 +65,98 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Mostrar/ocultar contraseña
+            const togglePassword = document.querySelector(".toggle-password");
+            const passwordInput = document.getElementById("passwordInput");
+            const icon = togglePassword.querySelector("i");
+
+            togglePassword.addEventListener("click", function () {
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    icon.classList.remove("bi-eye");
+                    icon.classList.add("bi-eye-slash");
+                } else {
+                    passwordInput.type = "password";
+                    icon.classList.remove("bi-eye-slash");
+                    icon.classList.add("bi-eye");
+                }
+            });
+
+            // Tooltip para mostrar/ocultar contraseña
+            var tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Validación personalizada para el formulario
+            document.getElementById("editUserForm").addEventListener("submit", function (event) {
+                var password = document.querySelector('input[name="Password"]').value;
+                var name = document.querySelector('input[name="Name"]').value;
+
+                var errors = [];
+
+                // Validación de campos vacíos
+                if (!name) {
+                    errors.push("Ingrese nombre de usuario.");
+                }
+
+                if (!password) {
+                    errors.push("Ingrese contraseña.");
+                }
+
+                // Si hay errores por campos vacíos, mostrar alerta
+                if (errors.length > 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos obligatorios',
+                        text: errors.join(" "),
+                    });
+                    event.preventDefault();
+                    return false; // Detener el envío del formulario
+                }
+
+                // Si ambos campos tienen datos, validamos la contraseña
+                errors = [];
+
+                // 1. Longitud mínima de 8 caracteres
+                if (password.length < 8) {
+                    errors.push("La contraseña debe tener al menos 8 caracteres.");
+                }
+
+                // 2. Al menos un número
+                if (!/\d/.test(password)) {
+                    errors.push("La contraseña debe contener al menos un número.");
+                }
+
+                // 3. Al menos una letra
+                if (!/[a-zA-Z]/.test(password)) {
+                    errors.push("La contraseña debe contener al menos una letra.");
+                }
+
+                // Mostrar errores de validación de contraseña
+                if (errors.length > 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Contraseña no válida',
+                        text: errors.join(" "),
+                    });
+                    event.preventDefault();
+                    return false;
+                }
+
+                // Si no hay errores, deshabilitar botón de submit
+                var submitButton = document.querySelector(".save-btn");
+                submitButton.disabled = true;
+
+                // Habilitar botón después de 5 segundos
+                setTimeout(function () {
+                    submitButton.disabled = false;
+                }, 5000);
+            });
+        });
+    </script>
 }

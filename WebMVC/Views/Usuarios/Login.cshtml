@@ -4,45 +4,57 @@
     ViewData["Title"] = "Login";
 }
 
-<!-- Cargar Font Awesome (opcional, si no usas Bootstrap Icons) -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
 <div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light">
-    <div class="card shadow-sm" style="max-width: 400px; width: 100%;">
+    <div id="loginCard" class="card p-4 shadow-lg border-0 animate__animated animate__fadeIn">
         <div class="card-body">
             <h1 class="card-title text-center mb-4">Iniciar Sesión</h1>
             <form asp-action="Login" method="post" id="loginForm">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div asp-validation-summary="ModelOnly" class="text-danger text-center"></div>
 
-                <div class="mb-3 input-group">
-                    <span class="input-group-text"><i class="fas fa-user"></i></span>
-                    <input asp-for="Name" class="form-control" placeholder="Ingrese su nombre de usuario" required />
-                    <span asp-validation-for="Name" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3 input-group">
-                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                    <input asp-for="Password" class="form-control" type="password" placeholder="Ingrese su contraseña" required />
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100" id="loginButton">
-                    <i class="fas fa-sign-in-alt"></i> Ingresar
-                </button>
-
-                <div class="mt-3 text-center">
-                    <span id="loadingMessage" class="text-primary fw-bold" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i> Ingresando a la aplicación...
-                    </span>
-                </div>
-
-                @if (ViewBag.Mensaje != null)
-                {
-                    <div class="mt-3 text-center">
-                        <span class="text-danger">@ViewBag.Mensaje</span>
+                <!-- Campo Usuario -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input asp-for="Name" class="form-control" id="usernameInput" placeholder="Ingrese su usuario" required />
                     </div>
-                }
+                    <div class="invalid-feedback">
+                        <span asp-validation-for="Name"></span>
+                    </div>
+                </div>
+
+                <!-- Campo Contraseña -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input asp-for="Password" class="form-control" id="passwordInput" type="password" placeholder="Ingrese su contraseña" required />
+                        <button type="button" class="btn btn-outline-secondary toggle-password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="invalid-feedback">
+                        <span asp-validation-for="Password"></span>
+                    </div>
+                </div>
+
+                <!-- Botón de inicio de sesión -->
+                <button type="submit" class="btn btn-outline-success w-100" id="loginButton">
+                    <span class="default-text"><i class="bi bi-box-arrow-in-right"></i> Ingresar</span>
+                </button>
             </form>
+        </div>
+    </div>
+
+    <!-- Pantalla de carga oculta -->
+    <div id="loadingScreen" class="loading-screen d-none">
+        <div class="loading-content">
+            <h2 class="loading-text">Ingresando...</h2>
+            <div class="loading-bars">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -50,18 +62,136 @@
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        document.getElementById("loginForm").addEventListener("submit", function () {
-            let loginButton = document.getElementById("loginButton");
-            let loadingMessage = document.getElementById("loadingMessage");
+        document.addEventListener("DOMContentLoaded", function () {
+            let card = document.getElementById("loginCard");
+            card.classList.add("animate__animated", "animate__zoomIn");
 
-            loginButton.disabled = true;
+            // Mostrar/Ocultar contraseña
+            document.querySelector(".toggle-password").addEventListener("click", function () {
+                let passwordInput = document.getElementById("passwordInput");
+                let icon = this.querySelector("i");
 
-            loadingMessage.style.display = "block";
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    icon.classList.replace("bi-eye", "bi-eye-slash");
+                } else {
+                    passwordInput.type = "password";
+                    icon.classList.replace("bi-eye-slash", "bi-eye");
+                }
+            });
 
-            setTimeout(() => {
-                loadingMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando artículos...';
-            }, 1000);
+            // Validación y animación en el submit
+            document.getElementById("loginForm").addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                let loginButton = document.getElementById("loginButton");
+                let loginCard = document.getElementById("loginCard");
+                let loadingScreen = document.getElementById("loadingScreen");
+
+                let username = document.getElementById("usernameInput").value.trim();
+                let password = document.getElementById("passwordInput").value.trim();
+
+                if (username === "" || password === "") {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Campos incompletos",
+                        text: "Por favor, ingrese su usuario y su contraseña.",
+                        confirmButtonColor: "#198754"
+                    });
+                    return;
+
+                }
+
+                // Ocultar formulario y mostrar animación de carga
+                loginCard.classList.add("animate__fadeOut");
+                setTimeout(() => {
+                    loginCard.classList.add("d-none");
+                    loadingScreen.classList.remove("d-none");
+                    loadingScreen.classList.add("animate__fadeIn");
+                }, 250);
+
+                // Simular proceso de autenticación antes de enviar el formulario
+                setTimeout(() => {
+                    event.target.submit();
+                }, 250);
+            });
+
+            // Mostrar mensaje de error si existe
+            // Convertir ViewBag.Mensaje a UTF-8 correctamente
+        let mensaje = "@Html.Raw(ViewBag.Mensaje)";
+        if (mensaje && mensaje.trim() !== "") {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: mensaje,
+                confirmButtonColor: "#198754"
+            });
+        }
         });
     </script>
+
+    <style>
+        /* Estilos de la pantalla de carga */
+        .loading-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .loading-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+
+        .loading-bars {
+            display: flex;
+            gap: 5px;
+        }
+
+            .loading-bars .bar {
+                width: 10px;
+                height: 30px;
+                background: #28a745;
+                animation: bounce 1.2s infinite ease-in-out;
+            }
+
+                .loading-bars .bar:nth-child(2) {
+                    animation-delay: 0.1s;
+                }
+
+                .loading-bars .bar:nth-child(3) {
+                    animation-delay: 0.2s;
+                }
+
+                .loading-bars .bar:nth-child(4) {
+                    animation-delay: 0.3s;
+                }
+
+                .loading-bars .bar:nth-child(5) {
+                    animation-delay: 0.4s;
+                }
+
+        @@keyframes bounce {
+            0%, 80%, 100%
+
+        {
+            transform: scaleY(0.3);
+        }
+
+        40% {
+            transform: scaleY(1);
+        }
+
+        }
+    </style>
 }

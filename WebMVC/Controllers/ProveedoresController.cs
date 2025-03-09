@@ -22,12 +22,26 @@ namespace WebMVC.Controllers
             _cache = memoryCache;
         }
 
+        private HttpClient ConfigureClient()
+        {
+            var client = _httpClientFactory.CreateClient();
+            var token = HttpContext.Session.GetString("Token");
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
+            return client;
+        }
+
+
         // GET: Proveedores
         public async Task<ActionResult> Index()
         {
             if (!_cache.TryGetValue("Proveedores", out List<ProveedorDTO> proveedores))
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 var response = await client.GetAsync(_urlApi);
 
                 if (response.IsSuccessStatusCode)
@@ -51,7 +65,7 @@ namespace WebMVC.Controllers
             // Intentamos obtener el proveedor de la caché
             if (!_cache.TryGetValue(cacheKey, out proveedor))
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 var response = await client.GetAsync($"{_urlApi}/{id}");
 
                 if (response.IsSuccessStatusCode)
@@ -81,12 +95,11 @@ namespace WebMVC.Controllers
 
         // POST: Proveedores/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(ProveedorDTO proveedor)
         {
             if (ModelState.IsValid)
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 var response = await client.PostAsJsonAsync(_urlApi, proveedor);
 
                 if (response.IsSuccessStatusCode)
@@ -118,7 +131,6 @@ namespace WebMVC.Controllers
 
         // POST: Proveedores/Edit/5
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(int id, ProveedorDTO proveedor)
         {
             if (id != proveedor.Id)
@@ -128,7 +140,7 @@ namespace WebMVC.Controllers
 
             if (ModelState.IsValid)
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 var response = await client.PutAsJsonAsync($"{_urlApi}/{id}", proveedor);
 
                 if (response.IsSuccessStatusCode)
@@ -146,6 +158,7 @@ namespace WebMVC.Controllers
             return View(proveedor);
         }
 
+
         // GET: Proveedores/Delete/5
         public async Task<ActionResult> Delete(int id)
         {
@@ -160,10 +173,9 @@ namespace WebMVC.Controllers
 
         // POST: Proveedores/Delete/5
         [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            var client = _httpClientFactory.CreateClient();
+            var client = ConfigureClient();
             var response = await client.DeleteAsync($"{_urlApi}/{id}");
 
             if (response.IsSuccessStatusCode)
@@ -186,7 +198,7 @@ namespace WebMVC.Controllers
             // Intentamos obtener el proveedor de la caché
             if (!_cache.TryGetValue(cacheKey, out proveedor))
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = ConfigureClient();
                 var response = await client.GetAsync($"{_urlApi}/{id}");
 
                 if (response.IsSuccessStatusCode)

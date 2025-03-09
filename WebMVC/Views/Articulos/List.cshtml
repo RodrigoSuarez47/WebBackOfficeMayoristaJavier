@@ -1,44 +1,55 @@
 ﻿@model IEnumerable<DTOs.ArticuloDTO>
+@Html.AntiForgeryToken()
 
 @{
     ViewData["Title"] = "Artículos";
 }
 
-<h1 class="text-center my-4"><i class="fas fa-box"></i> Listado de Artículos</h1>
+<h1 class="text-center my-4 animate__animated animate__fadeInDown">
+    <i class="bi bi-box-seam"></i> Listado de Artículos
+</h1>
 
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <input type="text" id="searchString" class="form-control w-50 shadow-sm" placeholder="🔎 Buscar artículo..." />
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 animate__animated animate__fadeInUp">
+        <div class="input-group shadow-sm" style="max-width: 400px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchString" class="form-control" placeholder="Buscar artículo...">
+        </div>
 
-        <a class="btn btn-success shadow-sm" asp-action="Create">
-            <i class="fas fa-plus"></i> Agregar Artículo
+        <a class="btn btn-outline-success shadow-sm d-flex align-items-center gap-2" asp-action="Create">
+            <i class="bi bi-plus-lg"></i> <span>Agregar Artículo</span>
         </a>
     </div>
 
-    <div class="table-responsive">
+    <!-- Contenedor para manejar el overflow con scroll horizontal, si es necesario -->
+    <div class="table-container" style="overflow-x: auto; width: 100%;">
         <table class="table table-hover table-striped table-bordered text-center shadow-sm rounded-3" id="articlesTable">
             <thead class="table-dark">
                 <tr>
-                    <th onclick="sortTable(0, this)"><i class="fa-solid fa-hashtag"></i></th>
-                    <th><i class="fa-solid fa-image"></i></th>
-                    <th onclick="sortTable(2, this)">Nombre</th>
-                    <th onclick="sortTable(3, this)">Descripción</th>
-                    <th onclick="sortTable(4, this)"><i class="fa-solid fa-money-bill-transfer"></i>Compra</th>
-                    <th onclick="sortTable(5, this)"><i class="fa-solid fa-dollar-sign"></i>Mayor</th>
-                    <th onclick="sortTable(6, this)"><i class="fa-solid fa-dollar-sign"></i>Unidad</th>
-                    <th onclick="sortTable(7, this)"><i class="fa-solid fa-hand-holding-dollar"></i>Mínimo</th>
-                    <th onclick="sortTable(8, this)"><i class="fa-solid fa-dolly"></i> Stock</th>
-                    <th onclick="sortTable(9, this)"><i class="fa-solid fa-calendar-xmark"></i>Vencimiento</th>
-                    <th><i class="fa-solid fa-gears"></i>  Acciones</th>
+                    <th onclick="sortTable(0, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-hash"></i> Id</span></th>
+                    <th class="col-2"><span class="d-flex align-items-center gap-1"><i class="bi bi-card-image"></i> Imagen</span></th>
+                    <th onclick="sortTable(2, this)" class="col-3"><span class="d-flex align-items-center gap-1"><i class="bi bi-tag"></i> Nombre</span></th>
+                    <th onclick="sortTable(3, this)" class="col-4"><span class="d-flex align-items-center gap-1"><i class="bi bi-card-text"></i> Descripción</span></th>
+                    <th onclick="sortTable(4, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-cash"></i> Compra</span></th>
+                    <th onclick="sortTable(5, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-cash"></i> Mayor</span></th>
+                    <th onclick="sortTable(6, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-cash"></i> Unidad</span></th>
+                    <th onclick="sortTable(7, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-cart-plus"></i> Mínimo</span></th>
+                    <th onclick="sortTable(8, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-boxes"></i> Stock</span></th>
+                    <th onclick="sortTable(9, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-calendar-x"></i> Vencimiento</span></th>
+                    <th class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-eye"></i> Visible</span></th> 
+@*                     <th class="col-2"><span class="d-flex align-items-center gap-1"><i class="bi bi-person"></i> Proveedor</span></th> <!-- Nueva columna Proveedor -->
+                    <th class="col-2"><span class="d-flex align-items-center gap-1"><i class="bi bi-building"></i> Compañía</span></th> <!-- Nueva columna Compañía --> *@
+                    <th class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-gear"></i> Acciones</span></th>
                 </tr>
             </thead>
+
             <tbody id="articlesBody">
                 @foreach (var item in Model)
                 {
-                    <tr class="align-middle">
+                    <tr class="align-middle animate__animated animate__fadeIn">
                         <td>@Html.DisplayFor(modelItem => item.Id)</td>
                         <td>
-                            <img src="@item.ImageUrl" alt="Imagen de @item.Name" class="img-thumbnail rounded-3 shadow-sm" style="max-width: 80px; max-height: 80px;" />
+                            <img src="@item.ImageUrl" alt="Imagen de @item.Name" class="img-thumbnail rounded-3 shadow-sm" style="max-width: 60px; max-height: 60px;" />
                         </td>
                         <td>@Html.DisplayFor(modelItem => item.Name)</td>
                         <td>@Html.DisplayFor(modelItem => item.Description)</td>
@@ -48,14 +59,27 @@
                         <td class="text-center">@Html.DisplayFor(modelItem => item.MinimumPurchase)</td>
                         <td class="text-center">@Html.DisplayFor(modelItem => item.Stock)</td>
                         <td class="text-center">@Html.DisplayFor(modelItem => item.ExpirationDate)</td>
+                        <td class="text-center">
+                            @if (item.IsVisible)
+                            {
+                                <span class="badge bg-success">Sí</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">No</span>
+                            }
+                        </td>
+                        
+                        @* <td>@item.Supplier?.Name</td> <!-- Proveedor -->
+                        <td>@item.Supplier?.CompanyName</td> <!-- Compañía --> *@
                         <td>
                             <div class="btn-group">
-                                <a class="btn btn-sm btn-secondary shadow-sm" asp-action="Edit" asp-route-id="@item.Id">
-                                    <i class="fas fa-edit"></i> Editar
+                                <a class="btn btn-sm btn-outline-secondary shadow-sm" asp-action="Edit" asp-route-id="@item.Id">
+                                    <i class="bi bi-pencil-square"></i> Editar
                                 </a>
-                                <a class="btn btn-sm btn-danger shadow-sm" asp-action="Delete" asp-route-id="@item.Id">
-                                    <i class="fas fa-trash-alt"></i> Eliminar
-                                </a>
+                                <button class="btn btn-sm btn-outline-danger shadow-sm delete-btn" data-id="@item.Id">
+                                    <i class="bi bi-trash3"></i> Eliminar
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -75,7 +99,6 @@
             var tbody = table.getElementsByTagName("tbody")[0];
             var rows = Array.from(tbody.getElementsByTagName("tr"));
 
-            // Alternar el orden de la columna seleccionada
             if (lastSortedColumn === columnIndex) {
                 ascending = !ascending;
             } else {
@@ -95,28 +118,55 @@
             tbody.innerHTML = "";
             rows.forEach(row => tbody.appendChild(row));
 
-            // Resetear estilos de los otros encabezados
-            document.querySelectorAll("th").forEach(th => {
-                th.classList.remove("table-secondary");
-            });
-
-            // Resaltar la columna ordenada
+            document.querySelectorAll("th").forEach(th => th.classList.remove("table-secondary"));
             header.classList.add("table-secondary");
 
             lastSortedColumn = columnIndex;
         }
 
-        // Filtrado de búsqueda optimizado
         document.getElementById('searchString').addEventListener('input', function () {
             var searchString = this.value.toLowerCase();
             var articles = document.querySelectorAll('#articlesBody tr');
 
-            // Filtrar de forma eficiente sin recorrer todo el DOM constantemente
             articles.forEach(function (article) {
                 var name = article.querySelector('td:nth-child(3)').textContent.toLowerCase();
                 var description = article.querySelector('td:nth-child(4)').textContent.toLowerCase();
 
                 article.style.display = (name.includes(searchString) || description.includes(searchString)) ? '' : 'none';
+            });
+        });
+
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", function (event) {
+                event.preventDefault();
+                let articleId = this.getAttribute("data-id");
+
+                Swal.fire({
+                    title: "¿Estás seguro?",
+                    text: "No podrás revertir esto.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        let form = document.createElement("form");
+                        form.method = "post";
+                        form.action = "/Articulos/Delete";
+                        form.style.display = "none";
+
+                        let input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = "id";
+                        input.value = articleId;
+
+                        form.appendChild(input);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
             });
         });
     </script>
