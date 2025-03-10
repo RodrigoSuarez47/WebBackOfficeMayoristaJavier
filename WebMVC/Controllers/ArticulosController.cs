@@ -2,8 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 public class ArticulosController : Controller
 {
@@ -91,14 +92,14 @@ public class ArticulosController : Controller
     public async Task<ActionResult> List()
     {
         // Se intenta cargar desde caché; si no, se consulta la API y se cachea por 10 minutos
-        var articulos = await GetApiResponse<Collection<ArticuloDTO>>("GetAll", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
-        return View(articulos ?? new Collection<ArticuloDTO>());
+        var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+        return View(articulos ?? new List<ArticuloDTO>());
     }
 
     // GET: ArticulosController/Details/5
     public async Task<ActionResult> Details(int id)
     {
-        var articulo = await GetApiResponse<ArticuloDTO>($"GetById/{id}", $"Articulo_{id}", TimeSpan.FromMinutes(30)).ConfigureAwait(false);
+        var articulo = await GetApiResponse<ArticuloDTO>($"{id}", $"Articulo_{id}", TimeSpan.FromMinutes(30)).ConfigureAwait(false);
         if (articulo != null)
         {
             return View(articulo);
@@ -117,7 +118,7 @@ public class ArticulosController : Controller
     [HttpPost]
     public async Task<ActionResult> Create(ArticuloDTO articulo)
     {
-        var errorMessage = await PostOrPutApiResponse("Create", HttpMethod.Post, articulo).ConfigureAwait(false);
+        var errorMessage = await PostOrPutApiResponse("", HttpMethod.Post, articulo).ConfigureAwait(false);
         if (string.IsNullOrEmpty(errorMessage))
         {
             _memoryCache.Remove(CacheKey); // Invalida el caché de la lista de artículos
@@ -130,7 +131,7 @@ public class ArticulosController : Controller
     // GET: ArticulosController/Edit/5
     public async Task<ActionResult> Edit(int id)
     {
-        var articulo = await GetApiResponse<ArticuloDTO>($"GetById/{id}", $"Articulo_{id}", TimeSpan.FromMinutes(30)).ConfigureAwait(false);
+        var articulo = await GetApiResponse<ArticuloDTO>($"{id}", $"Articulo_{id}", TimeSpan.FromMinutes(30)).ConfigureAwait(false);
         if (articulo != null)
         {
             return View(articulo);
@@ -143,7 +144,7 @@ public class ArticulosController : Controller
     [HttpPost]
     public async Task<ActionResult> Edit(int id, ArticuloDTO articulo)
     {
-        var errorMessage = await PostOrPutApiResponse($"Update/{id}", HttpMethod.Put, articulo).ConfigureAwait(false);
+        var errorMessage = await PostOrPutApiResponse($"{id}", HttpMethod.Put, articulo).ConfigureAwait(false);
         if (string.IsNullOrEmpty(errorMessage))
         {
             _memoryCache.Remove(CacheKey);
@@ -160,7 +161,7 @@ public class ArticulosController : Controller
     {
         try
         {
-            var response = await PostOrPutApiResponse($"Delete/{id}", HttpMethod.Delete).ConfigureAwait(false);
+            var response = await PostOrPutApiResponse($"{id}", HttpMethod.Delete).ConfigureAwait(false);
 
             if (string.IsNullOrEmpty(response))
             {
