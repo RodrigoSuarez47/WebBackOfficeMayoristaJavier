@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using WebMVC.ClasesAuxiliares;
 
 namespace WebMVC.Controllers
 {
@@ -13,22 +12,32 @@ namespace WebMVC.Controllers
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _urlApi;
+
         public UsuariosController(IHttpClientFactory httpClientFactory, IConfiguration config)
         {
             _httpClientFactory = httpClientFactory;
-            _urlApi = config.GetValue<string>("UrlAPI") + "Users";
+            _urlApi = config.GetValue<string>("UrlAPI") + "users"; // Cambio para reflejar la nueva ruta RESTful
         }
+
         private HttpClient ConfigureClient()
         {
             var client = _httpClientFactory.CreateClient();
             var token = HttpContext.Session.GetString("Token");
 
+            // Solo incluir el token si está presente y es necesario
             if (!string.IsNullOrEmpty(token))
             {
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }
 
             return client;
+        }
+
+        private async Task<IActionResult> HandleErrorResponse(HttpResponseMessage response)
+        {
+            var message = await response.Content.ReadAsStringAsync();
+            ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+            return View("Error");
         }
 
         [HttpGet]
@@ -41,16 +50,19 @@ namespace WebMVC.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var usuarios = JsonConvert.DeserializeObject<List<UsuarioDTO>>(await response.Content.ReadAsStringAsync());
+                    var usuarios = await response.Content.ReadFromJsonAsync<List<UsuarioDTO>>();
                     return View(usuarios);
+                }
+                else
+                {
+                    return await HandleErrorResponse(response);
                 }
             }
             catch
             {
                 ViewBag.Mensaje = "Error al obtener la lista de usuarios.";
+                return View(new List<UsuarioDTO>());
             }
-
-            return View(new List<UsuarioDTO>());
         }
 
         [HttpGet]
@@ -62,12 +74,12 @@ namespace WebMVC.Controllers
             if (ModelState.IsValid)
             {
                 var client = ConfigureClient();
-                using var response = await client.PostAsJsonAsync($"{_urlApi}/AddUser", usuario);
+                using var response = await client.PostAsJsonAsync(_urlApi, usuario); // POST directamente en /users
 
                 if (response.IsSuccessStatusCode)
                     return RedirectToAction("Index");
 
-                ViewBag.Mensaje = "Error al crear el usuario.";
+                return await HandleErrorResponse(response);
             }
             return View(usuario);
         }
@@ -78,20 +90,21 @@ namespace WebMVC.Controllers
             try
             {
                 var client = ConfigureClient();
-                using var response = await client.GetAsync($"{_urlApi}/GetUserById/{id}");
+                using var response = await client.GetAsync($"{_urlApi}/{id}"); // GET en /users/{id}
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var usuario = JsonConvert.DeserializeObject<UsuarioDTO>(await response.Content.ReadAsStringAsync());
+                    var usuario = await response.Content.ReadFromJsonAsync<UsuarioDTO>();
                     return View(usuario);
                 }
+
+                return await HandleErrorResponse(response);
             }
             catch
             {
                 ViewBag.Mensaje = "Error al obtener el usuario.";
+                return RedirectToAction("Index");
             }
-
-            return RedirectToAction("Index");
         }
 
         [HttpPost]
@@ -100,12 +113,12 @@ namespace WebMVC.Controllers
             if (ModelState.IsValid)
             {
                 var client = ConfigureClient();
-                using var response = await client.PutAsJsonAsync($"{_urlApi}/UpdateUser/{usuario.Id}", usuario);
+                using var response = await client.PutAsJsonAsync($"{_urlApi}/{usuario.Id}", usuario); // PUT en /users/{id}
 
                 if (response.IsSuccessStatusCode)
                     return RedirectToAction("Index");
 
-                ViewBag.Mensaje = "Error al editar el usuario.";
+                return await HandleErrorResponse(response);
             }
             return View(usuario);
         }
@@ -116,19 +129,18 @@ namespace WebMVC.Controllers
             try
             {
                 var client = ConfigureClient();
-                using var response = await client.DeleteAsync($"{_urlApi}/DeleteUser/{id}");
+                using var response = await client.DeleteAsync($"{_urlApi}/{id}"); // DELETE en /users/{id}
 
                 if (response.IsSuccessStatusCode)
                     return RedirectToAction("Index");
 
-                ViewBag.Mensaje = "Error al eliminar el usuario.";
+                return await HandleErrorResponse(response);
             }
             catch
             {
                 ViewBag.Mensaje = "Error interno al eliminar el usuario.";
+                return RedirectToAction("Index");
             }
-
-            return RedirectToAction("Index");
         }
 
         [HttpGet]
@@ -137,38 +149,35 @@ namespace WebMVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginDTO usuario)
         {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Mensaje = "Error, debe ingresar Email y Contraseña";
+                return View("Login");
+            }
+
             try
             {
-                if (ModelState.IsValid)
+                var client = ConfigureClient();
+                using var response = await client.PostAsJsonAsync($"{_urlApi}/login", usuario); // POST en /users/login
+
+                if (response.IsSuccessStatusCode)
                 {
-                    var client = ConfigureClient();
-                    using var response = await client.PostAsJsonAsync($"{_urlApi}/Login", usuario);
-
-                    var cuerpo = await response.Content.ReadAsStringAsync();
-                    if (response.IsSuccessStatusCode)
+                    var usuarioLogueado = await response.Content.ReadFromJsonAsync<UsuarioLogueadoDTO>();
+                    if (usuarioLogueado != null)
                     {
-                        var usuarioLogueado = JsonConvert.DeserializeObject<UsuarioLogueadoDTO>(cuerpo);
-                        if (usuarioLogueado != null)
-                        {
-                            HttpContext.Session.SetString("Token", usuarioLogueado.Token);
-                            HttpContext.Session.SetString("Nombre", usuarioLogueado.Name);
-                            Console.WriteLine("Token: " + HttpContext.Session.GetString("Token"));
-
-                            return RedirectToAction("List", "Articulos");
-                        }
-                        ViewBag.Mensaje = "Email o Contraseña incorrectos";
+                        HttpContext.Session.SetString("Token", usuarioLogueado.Token);
+                        HttpContext.Session.SetString("Nombre", usuarioLogueado.Name);
+                        return RedirectToAction("List", "Articulos");
                     }
-                    else
-                    {
-                        ViewBag.Mensaje = cuerpo;
-                    }
+                    ViewBag.Mensaje = "Email o Contraseña incorrectos";
                 }
                 else
                 {
-                    ViewBag.Mensaje = "Error, debe ingresar Email y Contraseña";
+                    var cuerpo = await response.Content.ReadAsStringAsync();
+                    ViewBag.Mensaje = cuerpo;
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 ViewBag.Mensaje = "Error interno. Inténtelo más tarde";
             }
@@ -186,6 +195,7 @@ namespace WebMVC.Controllers
                     HttpContext.Session.Clear();
                     return RedirectToAction("Login");
                 }
+
                 ViewBag.Mensaje = "Error al cerrar sesión";
             }
             catch

@@ -20,7 +20,7 @@ namespace WebMVC.Controllers
         {
             _httpClientFactory = httpClientFactory;
             _memoryCache = memoryCache;
-            _urlApi = config.GetValue<string>("UrlAPI") + "Orders/";
+            _urlApi = config.GetValue<string>("UrlAPI") + "Orders/"; // Asegúrate que la ruta esté correcta
         }
 
         private HttpClient ConfigureClient()
@@ -40,22 +40,22 @@ namespace WebMVC.Controllers
         public async Task<ActionResult> Index()
         {
             // Primero intenta obtener la lista de pedidos desde la caché
-            if (!_memoryCache.TryGetValue(_cacheKey, out IEnumerable<PedidoDTO> orders))
+            if (!_memoryCache.TryGetValue(_cacheKey, out IEnumerable<PedidoDTO> pedidos))
             {
                 // Si no está en caché, realiza la llamada a la API para obtener los pedidos
-                orders = await GetOrdersFromApi();
+                pedidos = await GetPedidosFromApi();
 
                 // Almacena los pedidos en caché con una expiración de 10 minutos
                 var cacheExpirationOptions = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
-                _memoryCache.Set(_cacheKey, orders, cacheExpirationOptions);
+                _memoryCache.Set(_cacheKey, pedidos, cacheExpirationOptions);
             }
 
-            return View(orders);
+            return View(pedidos);
         }
 
         // Método para obtener los pedidos desde la API
-        private async Task<IEnumerable<PedidoDTO>> GetOrdersFromApi()
+        private async Task<IEnumerable<PedidoDTO>> GetPedidosFromApi()
         {
             try
             {
@@ -66,8 +66,8 @@ namespace WebMVC.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonString = await response.Content.ReadAsStringAsync();
-                    var orders = JsonConvert.DeserializeObject<IEnumerable<PedidoDTO>>(jsonString);
-                    return orders;
+                    var pedidos = JsonConvert.DeserializeObject<IEnumerable<PedidoDTO>>(jsonString);
+                    return pedidos;
                 }
                 else
                 {
@@ -78,7 +78,6 @@ namespace WebMVC.Controllers
             catch (Exception ex)
             {
                 // Manejo de excepciones: Log y re-lanzar error
-                // Puedes registrar el error con tu sistema de logging si lo tienes configurado
                 throw new Exception("Hubo un error al intentar obtener los pedidos desde la API.", ex);
             }
         }
@@ -87,18 +86,18 @@ namespace WebMVC.Controllers
         public async Task<ActionResult> Details(int id)
         {
             // Llamada a la API para obtener los detalles del pedido
-            var order = await GetOrderFromApi(id);
+            var pedido = await GetPedidoFromApi(id);
 
-            if (order == null)
+            if (pedido == null)
             {
                 return NotFound();
             }
 
-            return View(order);
+            return View(pedido);
         }
 
         // Método para obtener un solo pedido desde la API
-        private async Task<PedidoDTO> GetOrderFromApi(int id)
+        private async Task<PedidoDTO> GetPedidoFromApi(int id)
         {
             try
             {
@@ -109,8 +108,8 @@ namespace WebMVC.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonString = await response.Content.ReadAsStringAsync();
-                    var order = JsonConvert.DeserializeObject<PedidoDTO>(jsonString);
-                    return order;
+                    var pedido = JsonConvert.DeserializeObject<PedidoDTO>(jsonString);
+                    return pedido;
                 }
                 else
                 {
@@ -133,7 +132,7 @@ namespace WebMVC.Controllers
 
         // POST: PedidosController/Create
         [HttpPost]
-        public async Task<ActionResult> Create(PedidoDTO order)
+        public async Task<ActionResult> Create(PedidoDTO pedido)
         {
             try
             {
@@ -142,7 +141,7 @@ namespace WebMVC.Controllers
                     // Llamada a la API para crear el pedido
                     var client = ConfigureClient();
 
-                    var content = new StringContent(JsonConvert.SerializeObject(order), System.Text.Encoding.UTF8, "application/json");
+                    var content = new StringContent(JsonConvert.SerializeObject(pedido), System.Text.Encoding.UTF8, "application/json");
                     var response = await client.PostAsync(_urlApi, content);
 
                     if (response.IsSuccessStatusCode)
@@ -157,31 +156,31 @@ namespace WebMVC.Controllers
                     }
                 }
 
-                return View(order);
+                return View(pedido);
             }
             catch (Exception ex)
             {
                 // Manejo de excepciones: muestra el error en la vista
                 ModelState.AddModelError("", ex.Message);
-                return View(order);
+                return View(pedido);
             }
         }
 
         // GET: PedidosController/Edit/5
         public async Task<ActionResult> Edit(int id)
         {
-            var order = await GetOrderFromApi(id);
-            if (order == null)
+            var pedido = await GetPedidoFromApi(id);
+            if (pedido == null)
             {
                 return NotFound();
             }
 
-            return View(order);
+            return View(pedido);
         }
 
         // POST: PedidosController/Edit/5
         [HttpPost]
-        public async Task<ActionResult> Edit(int id, PedidoDTO order)
+        public async Task<ActionResult> Edit(int id, PedidoDTO pedido)
         {
             try
             {
@@ -189,7 +188,7 @@ namespace WebMVC.Controllers
                 {
                     var client = ConfigureClient();
 
-                    var content = new StringContent(JsonConvert.SerializeObject(order), System.Text.Encoding.UTF8, "application/json");
+                    var content = new StringContent(JsonConvert.SerializeObject(pedido), System.Text.Encoding.UTF8, "application/json");
                     var response = await client.PutAsync($"{_urlApi}{id}", content);
 
                     if (response.IsSuccessStatusCode)
@@ -204,26 +203,26 @@ namespace WebMVC.Controllers
                     }
                 }
 
-                return View(order);
+                return View(pedido);
             }
             catch (Exception ex)
             {
                 // Manejo de excepciones
                 ModelState.AddModelError("", ex.Message);
-                return View(order);
+                return View(pedido);
             }
         }
 
         // GET: PedidosController/Delete/5
         public async Task<ActionResult> Delete(int id)
         {
-            var order = await GetOrderFromApi(id);
-            if (order == null)
+            var pedido = await GetPedidoFromApi(id);
+            if (pedido == null)
             {
                 return NotFound();
             }
 
-            return View(order);
+            return View(pedido);
         }
 
         // POST: PedidosController/Delete/5
@@ -255,3 +254,4 @@ namespace WebMVC.Controllers
         }
     }
 }
+

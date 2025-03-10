@@ -37,7 +37,8 @@
                     <th onclick="sortTable(8, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-boxes"></i> Stock</span></th>
                     <th onclick="sortTable(9, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-calendar-x"></i> Vencimiento</span></th>
                     <th class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-eye"></i> Visible</span></th> 
-@*                     <th class="col-2"><span class="d-flex align-items-center gap-1"><i class="bi bi-person"></i> Proveedor</span></th> <!-- Nueva columna Proveedor -->
+                    <th class="col-2"><span class="d-flex align-items-center gap-1"><i class="bi bi-person"></i> Proveedor</span></th> <!-- Nueva columna Proveedor -->
+@*                     
                     <th class="col-2"><span class="d-flex align-items-center gap-1"><i class="bi bi-building"></i> Compañía</span></th> <!-- Nueva columna Compañía --> *@
                     <th class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-gear"></i> Acciones</span></th>
                 </tr>
@@ -69,8 +70,8 @@
                                 <span class="badge bg-danger">No</span>
                             }
                         </td>
-                        
-                        @* <td>@item.Supplier?.Name</td> <!-- Proveedor -->
+                         <td>@item.Supplier?.Name</td> <!-- Proveedor -->
+                        @* 
                         <td>@item.Supplier?.CompanyName</td> <!-- Compañía --> *@
                         <td>
                             <div class="btn-group">

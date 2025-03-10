@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-
 namespace WebMVC.Controllers
 {
     public class ProveedoresController : Controller
@@ -35,11 +34,12 @@ namespace WebMVC.Controllers
             return client;
         }
 
-
         // GET: Proveedores
         public async Task<ActionResult> Index()
         {
-            if (!_cache.TryGetValue("Proveedores", out List<ProveedorDTO> proveedores))
+            List<ProveedorDTO> proveedores;
+            // Intentamos obtener la lista de proveedores de la caché
+            if (!_cache.TryGetValue("Proveedores", out proveedores))
             {
                 var client = ConfigureClient();
                 var response = await client.GetAsync(_urlApi);
@@ -47,10 +47,16 @@ namespace WebMVC.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     proveedores = await response.Content.ReadFromJsonAsync<List<ProveedorDTO>>();
+                    // Almacenamos los proveedores en caché con una expiración de 60 minutos
                     _cache.Set("Proveedores", proveedores, new MemoryCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60)
                     });
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Error al obtener los proveedores.");
+                    return View(new List<ProveedorDTO>());
                 }
             }
             return View(proveedores);
@@ -72,7 +78,7 @@ namespace WebMVC.Controllers
                 {
                     proveedor = await response.Content.ReadFromJsonAsync<ProveedorDTO>();
 
-                    // Almacenamos el proveedor en caché
+                    // Almacenamos el proveedor en caché con una expiración de 10 minutos
                     _cache.Set(cacheKey, proveedor, new MemoryCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
@@ -110,7 +116,6 @@ namespace WebMVC.Controllers
                 }
                 else
                 {
-                    // Manejo de error
                     ModelState.AddModelError(string.Empty, "Error al crear el proveedor.");
                 }
             }
@@ -158,7 +163,6 @@ namespace WebMVC.Controllers
             return View(proveedor);
         }
 
-
         // GET: Proveedores/Delete/5
         public async Task<ActionResult> Delete(int id)
         {
@@ -186,6 +190,8 @@ namespace WebMVC.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // En caso de error, mostramos el mensaje adecuado
+            ModelState.AddModelError("", "Error al eliminar el proveedor.");
             return View();
         }
 
@@ -205,7 +211,7 @@ namespace WebMVC.Controllers
                 {
                     proveedor = await response.Content.ReadFromJsonAsync<ProveedorDTO>();
 
-                    // Almacenamos el proveedor en caché
+                    // Almacenamos el proveedor en caché con una expiración de 10 minutos
                     _cache.Set(cacheKey, proveedor, new MemoryCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
