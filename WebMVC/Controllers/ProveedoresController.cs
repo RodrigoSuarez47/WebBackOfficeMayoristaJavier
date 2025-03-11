@@ -103,21 +103,18 @@ namespace WebMVC.Controllers
         [HttpPost]
         public async Task<ActionResult> Create(ProveedorDTO proveedor)
         {
-            if (ModelState.IsValid)
-            {
                 var client = ConfigureClient();
                 var response = await client.PostAsJsonAsync(_urlApi, proveedor);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    // Limpiamos la caché ya que los datos han cambiado
-                    _cache.Remove("Proveedores");
-                    return RedirectToAction(nameof(Index));
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Error al crear el proveedor.");
-                }
+            if (response.IsSuccessStatusCode)
+            {
+                // Limpiamos la caché ya que los datos han cambiado
+                _cache.Remove("Proveedores");
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Error al crear el proveedor.");
             }
             return View(proveedor);
         }
@@ -142,15 +139,11 @@ namespace WebMVC.Controllers
             {
                 return NotFound();
             }
-
-            if (ModelState.IsValid)
-            {
                 var client = ConfigureClient();
                 var response = await client.PutAsJsonAsync($"{_urlApi}/{id}", proveedor);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Limpiamos la caché ya que los datos han cambiado
                     _cache.Remove("Proveedores");
                     _cache.Remove($"Proveedor_{id}");
                     return RedirectToAction(nameof(Index));
@@ -159,7 +152,6 @@ namespace WebMVC.Controllers
                 {
                     ModelState.AddModelError(string.Empty, "Error al actualizar el proveedor.");
                 }
-            }
             return View(proveedor);
         }
 
@@ -192,7 +184,7 @@ namespace WebMVC.Controllers
 
             // En caso de error, mostramos el mensaje adecuado
             ModelState.AddModelError("", "Error al eliminar el proveedor.");
-            return View();
+            return View("Index");
         }
 
         // Método auxiliar para obtener un proveedor por ID, usando la caché

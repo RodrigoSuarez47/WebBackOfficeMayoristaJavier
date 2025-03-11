@@ -1,5 +1,4 @@
 ﻿@model DTOs.ArticuloDTO
-@Html.AntiForgeryToken()
 
 @{
     ViewData["Title"] = "Agregar Artículo";
@@ -21,7 +20,7 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                     <!-- Campo Código -->
-                    <div class="mb-3">
+                    <div class="mb-3 visually-hidden">
                         <label asp-for="Id" class="form-label">
                             <i class="bi bi-hash me-1"></i> Código
                         </label>
@@ -125,6 +124,22 @@
                         </div>
                     </div>
 
+                    <!-- Proveedor -->
+                    <div class="mb-3">
+                        <label asp-for="SupplierId" class="form-label">
+                            <i class="bi bi-truck"></i> Proveedor
+                        </label>
+                        <select asp-for="SupplierId" class="form-select" id="ProveedorId">
+                            <option value="0">Seleccione un proveedor...</option>
+                            @foreach (var proveedor in ViewBag.Proveedores)
+                            {
+                                <option value="@proveedor.Id">@proveedor.Name - @proveedor.CompanyName</option>
+                            }
+                        </select>
+                        <span asp-validation-for="SupplierId" class="text-danger"></span>
+                    </div>
+
+
                     <!-- Venta por Peso -->
                     <div class="mb-3 form-check">
                         <input asp-for="IsSoldByWeight" class="form-check-input" type="checkbox" />
@@ -135,12 +150,11 @@
 
                     <!-- Visibilidad -->
                     <div class="mb-3 form-check">
-                        <input asp-for="IsVisible" class="form-check-input" type="checkbox" checked/>
+                        <input asp-for="IsVisible" class="form-check-input" type="checkbox" checked />
                         <label class="form-check-label" for="IsVisible">
-                            <i class="bi bi-weight me-1"></i> Visible para Clientes
+                            <i class="bi bi-eye me-1"></i> Visible para Clientes
                         </label>
                     </div>
-
                     <!-- Botón de envío -->
                     <div class="text-center">
                         <button type="submit" class="btn btn-outline-success w-100 animate__animated animate__fadeInUp">
@@ -162,7 +176,6 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-
     <script>
         function validarFormulario(event) {
             // Obtener valores
@@ -171,10 +184,11 @@
             let imageUrl = document.querySelector('input[name="ImageUrl"]').value.trim();
             let purchasePrice = parseFloat(document.querySelector('input[name="PurchasePrice"]').value);
             let salePrice = parseFloat(document.querySelector('input[name="SalePrice"]').value);
-            let unitPrice = parseFloat(document.querySelector('input[name="SaleUnitPrice"]').value);
+            let unitPrice = parseFloat(document.querySelector('input[name="UnitSalePrice"]').value);
             let minimumPurchase = parseFloat(document.querySelector('input[name="MinimumPurchase"]').value);
             let stock = parseFloat(document.querySelector('input[name="Stock"]').value);
             let expirationDate = document.querySelector('input[name="ExpirationDate"]').value;
+            let proveedorId = document.querySelector('#ProveedorId').value;
 
             // Validaciones críticas
             if (!nombre) {
@@ -258,7 +272,9 @@
             if (!expirationDate) {
                 warnings.push("No ingresó fecha de vencimiento.");
             }
-
+            if (!proveedorId) {
+             warnings.push("No seleccionó Proveedor.");
+        }
             // Si hay advertencias, mostrar confirmación
             if (warnings.length > 0) {
                 event.preventDefault();
@@ -287,16 +303,6 @@
 
             return true;
         }
-
-        function isValidUrl(string) {
-            try {
-                new URL(string);
-                return true;
-            } catch (_) {
-                return false;
-            }
-        }
-
 
         function isValidUrl(string) {
             try {

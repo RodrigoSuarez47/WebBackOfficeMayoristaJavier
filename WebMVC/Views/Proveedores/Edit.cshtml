@@ -1,53 +1,145 @@
 ﻿@model DTOs.ProveedorDTO
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Editar Proveedor";
 }
 
-<h1>Edit</h1>
+<h1 class="text-center my-4 animate__animated animate__fadeInDown">
+    <i class="bi bi-pencil-square"></i> Editar Proveedor
+</h1>
 
-<h4>ProveedorDTO</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Id" class="control-label"></label>
-                <input asp-for="Id" class="form-control" />
-                <span asp-validation-for="Id" class="text-danger"></span>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-body">
+                    <h4 class="text-center mb-3"><i class="bi bi-truck"></i> Datos del Proveedor</h4>
+                    <hr />
+                    <form asp-action="Edit" id="proveedorForm">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Id" class="form-label"><i class="bi bi-hash"></i> ID</label>
+                            <input asp-for="Id" class="form-control" readonly/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label"><i class="bi bi-person"></i> Nombre</label>
+                            <input asp-for="Name" class="form-control" id="name" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CompanyName" class="form-label"><i class="bi bi-building"></i> Empresa</label>
+                            <input asp-for="CompanyName" class="form-control" id="companyName" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PrincipalPhone" class="form-label"><i class="bi bi-telephone"></i> Teléfono Principal</label>
+                            <input asp-for="PrincipalPhone" class="form-control" id="principalPhone" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AlternativePhone" class="form-label"><i class="bi bi-phone"></i> Teléfono Alternativo</label>
+                            <input asp-for="AlternativePhone" class="form-control" id="alternativePhone" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CompanyName" class="control-label"></label>
-                <input asp-for="CompanyName" class="form-control" />
-                <span asp-validation-for="CompanyName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PrincipalPhone" class="control-label"></label>
-                <input asp-for="PrincipalPhone" class="form-control" />
-                <span asp-validation-for="PrincipalPhone" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="AlternativePhone" class="control-label"></label>
-                <input asp-for="AlternativePhone" class="form-control" />
-                <span asp-validation-for="AlternativePhone" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="text-center mt-3 animate__animated animate__fadeInUp">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.getElementById("proveedorForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevenir el envío si hay errores
+
+            // Obtener los campos
+            const name = document.getElementById("name").value.trim();
+            const companyName = document.getElementById("companyName").value.trim();
+            const principalPhone = document.getElementById("principalPhone").value.trim();
+            const alternativePhone = document.getElementById("alternativePhone").value.trim();
+
+            // Validaciones
+            if (name === "") {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "El nombre no puede estar vacío",
+                    confirmButtonColor: "#d33"
+                });
+                return;
+            }
+
+            if (companyName === "") {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "El nombre de la empresa no puede estar vacío",
+                    confirmButtonColor: "#d33"
+                });
+                return;
+            }
+
+            if (!/^\d{8,9}$/.test(principalPhone)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "El teléfono principal debe tener 8 o 9 dígitos",
+                    confirmButtonColor: "#d33"
+                });
+                return;
+            }
+
+            if (alternativePhone !== "" && !/^\d{8,9}$/.test(alternativePhone)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "El teléfono alternativo debe tener 8 o 9 dígitos",
+                    confirmButtonColor: "#d33"
+                });
+                return;
+            }
+
+            // Confirmación antes de guardar cambios
+            Swal.fire({
+                icon: "warning",
+                title: "¿Guardar cambios?",
+                text: "¿Estás seguro de que deseas actualizar este proveedor?",
+                showCancelButton: true,
+                confirmButtonText: "Sí, guardar",
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: "#28a745",
+                cancelButtonColor: "#d33"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "¡Cambios guardados!",
+                        text: "El proveedor ha sido actualizado correctamente.",
+                        confirmButtonColor: "#28a745"
+                    }).then(() => {
+                        event.target.submit(); // Enviar el formulario después de la confirmación
+                    });
+                }
+            });
+        });
+    </script>
 }

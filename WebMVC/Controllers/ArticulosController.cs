@@ -1,8 +1,12 @@
 ﻿using DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,21 +16,25 @@ public class ArticulosController : Controller
     private readonly IMemoryCache _memoryCache;
     private readonly string UrlApi;
     private readonly string CacheKey = "ListaArticulos";
+    private readonly string UrlApiProveedores;
+    private readonly string CacheKeyProveedores = "ListaProveedores";
 
     public ArticulosController(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache, IConfiguration config)
     {
         _httpClientFactory = httpClientFactory;
         _memoryCache = memoryCache;
         UrlApi = config.GetValue<string>("UrlAPI") + "Article/"; // Asegúrate de que esta ruta sea correcta para tus artículos
+        UrlApiProveedores = config.GetValue<string>("UrlAPI") + "Suppliers/";
     }
 
     private HttpClient ConfigureClient()
     {
+       
         var client = _httpClientFactory.CreateClient();
         var token = HttpContext.Session.GetString("Token");
         if (!string.IsNullOrEmpty(token))
         {
-            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token); // Utiliza Bearer en lugar de "Token"
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
         return client;
     }
@@ -109,10 +117,35 @@ public class ArticulosController : Controller
     }
 
     // GET: ArticulosController/Create
-    public ActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        return View(new ArticuloDTO()); // Devuelve la vista para crear un artículo
+        try
+        {
+            var client = ConfigureClient();
+            var respuesta = await client.GetAsync(UrlApiProveedores).ConfigureAwait(false);
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                string cuerpo = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var proveedores = JsonConvert.DeserializeObject<List<ProveedorDTO>>(cuerpo);
+                _memoryCache.Set(CacheKeyProveedores, proveedores, TimeSpan.FromMinutes(30));
+                ViewBag.Proveedores = new List<ProveedorDTO>(proveedores) ?? new List<ProveedorDTO>();
+            }
+            else
+            {
+                ViewBag.Proveedores = new List<ProveedorDTO>();
+                ViewBag.Mensaje = "No se pudieron cargar los proveedores. Intente nuevamente.";
+            }
+        }
+        catch (Exception)
+        {
+            ViewBag.Proveedores = new List<ProveedorDTO>();
+            ViewBag.Mensaje = "Ocurrió un error al cargar los proveedores.";
+        }
+        return View(new ArticuloDTO());
     }
+
+
 
     // POST: ArticulosController/Create
     [HttpPost]
@@ -125,20 +158,47 @@ public class ArticulosController : Controller
             return RedirectToAction(nameof(List));
         }
         ViewBag.Mensaje = "Error al crear el artículo: " + errorMessage;
-        return View(articulo); // Vuelve a la vista con los datos ingresados, para que el usuario corrija errores
+        return RedirectToAction("Create", articulo);
     }
 
     // GET: ArticulosController/Edit/5
     public async Task<ActionResult> Edit(int id)
     {
-        var articulo = await GetApiResponse<ArticuloDTO>($"{id}", $"Articulo_{id}", TimeSpan.FromMinutes(30)).ConfigureAwait(false);
+        var articulos = await GetApiResponse<Collection<ArticuloDTO>>("?", CacheKey, TimeSpan.FromMinutes(30)).ConfigureAwait(false);
+        var articulo = articulos?.FirstOrDefault(a => a.Id == id);
         if (articulo != null)
         {
+            try
+            {
+                var client = ConfigureClient();
+                var respuesta = await client.GetAsync(UrlApiProveedores).ConfigureAwait(false);
+
+                if (respuesta.IsSuccessStatusCode)
+                {
+                    string cuerpo = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var proveedores = JsonConvert.DeserializeObject<List<ProveedorDTO>>(cuerpo);
+                    _memoryCache.Set(CacheKeyProveedores, proveedores, TimeSpan.FromMinutes(30));
+                    ViewBag.Proveedores = new List<ProveedorDTO>(proveedores) ?? new List<ProveedorDTO>();
+                }
+                else
+                {
+                    ViewBag.Proveedores = new List<ProveedorDTO>();
+                    ViewBag.Mensaje = "No se pudieron cargar los proveedores. Intente nuevamente.";
+                }
+            }
+            catch (Exception)
+            {
+                ViewBag.Proveedores = new List<ProveedorDTO>();
+                ViewBag.Mensaje = "Ocurrió un error al cargar los proveedores.";
+            }
             return View(articulo);
         }
+        // Si no se encuentra el artículo, mostramos un mensaje de error
         ViewBag.Mensaje = "No se pudo obtener el artículo para editar.";
         return RedirectToAction(nameof(List));
     }
+
+
 
     // POST: ArticulosController/Edit/5
     [HttpPost]
@@ -152,7 +212,7 @@ public class ArticulosController : Controller
             return RedirectToAction(nameof(List));
         }
         ViewBag.Mensaje = "Error al actualizar el artículo: " + errorMessage;
-        return View(articulo);
+        return RedirectToAction("Edit", articulo);
     }
 
     // POST: ArticulosController/Delete/5

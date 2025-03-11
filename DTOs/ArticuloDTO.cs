@@ -42,7 +42,7 @@ namespace DTOs
         public int Stock { get; set; }
         [Display(Name = "Vencimiento")]
         public DateTime? ExpirationDate { get; set; }
-        public ProveedorDTO? Supplier { get; set; }
+        public int SupplierId { get; set; }
         [Display(Name = "Visible")]
         public bool IsVisible { get; set; }
         [Display(Name = "Venta por Peso")]

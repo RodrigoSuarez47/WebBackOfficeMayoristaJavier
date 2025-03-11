@@ -1,18 +1,16 @@
 ﻿@model DTOs.ArticuloDTO
-@Html.AntiForgeryToken()
-
 @{
     ViewData["Title"] = "Editar Artículo";
 }
 
 <h1 class="text-center my-4 animate__animated animate__fadeInDown">
-    <i class="bi bi-box-seam"></i> @ViewData["Title"]
+    <i class="bi bi-pencil-square"></i> Editar Artículo
 </h1>
-<h4 class="text-center text-secondary animate__animated animate__fadeInUp">Modificar los datos del Artículo</h4>
-<hr />
 
 <div class="row justify-content-center animate__animated animate__fadeIn">
     <div class="col-md-8 col-lg-6 shadow-lg p-4 rounded bg-light">
+        <h4 class="text-center mb-3"><i class="bi bi-truck"></i> Datos del Artículo</h4>
+        <hr />
         <form asp-action="Edit" method="post" id="editForm">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
 
@@ -111,6 +109,21 @@
                     <span asp-validation-for="ExpirationDate" class="text-danger"></span>
                 </div>
             </div>
+            <!-- Proveedor -->
+            <div class="mb-3">
+                <label asp-for="SupplierId" class="form-label">
+                    <i class="bi bi-truck"></i> Proveedor
+                </label>
+                <select asp-for="SupplierId" class="form-select" id="ProveedorId">
+                    <option value="0">Seleccione un proveedor...</option>
+                    @foreach (var proveedor in ViewBag.Proveedores)
+                    {
+                        <option value="@proveedor.Id">@proveedor.Name - @proveedor.CompanyName</option>
+                    }
+                </select>
+                <span asp-validation-for="SupplierId" class="text-danger"></span>
+            </div>
+
 
             <!-- Venta por Peso -->
             <div class="mb-3 form-check">
@@ -124,7 +137,7 @@
             <div class="mb-3 form-check">
                 <input asp-for="IsVisible" class="form-check-input" type="checkbox" />
                 <label class="form-check-label" for="IsVisible">
-                    <i class="bi bi-weight me-1"></i> Visible para Clientes
+                    <i class="bi bi-eye me-1"></i> Visible para Clientes
                 </label>
             </div>
 
@@ -173,6 +186,7 @@
             let minimumPurchase = parseFloat(document.querySelector('input[name="MinimumPurchase"]').value);
             let stock = parseFloat(document.querySelector('input[name="Stock"]').value);
             let expirationDate = document.querySelector('input[name="ExpirationDate"]').value;
+            let proveedorId = document.querySelector('#ProveedorId').value;
 
             // Validaciones
             if (!nombre) {
@@ -220,6 +234,9 @@
             if (!expirationDate) {
                 warnings.push("No ingresó fecha de vencimiento.");
             }
+             if (!proveedorId) {
+             warnings.push("No seleccionó Proveedor.");
+            }   
 
             // Si hay advertencias, mostrar alerta de confirmación
             if (warnings.length > 0) {

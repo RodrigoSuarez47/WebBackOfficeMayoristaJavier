@@ -33,13 +33,6 @@ namespace WebMVC.Controllers
             return client;
         }
 
-        private async Task<IActionResult> HandleErrorResponse(HttpResponseMessage response)
-        {
-            var message = await response.Content.ReadAsStringAsync();
-            ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
-            return View("Error");
-        }
-
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -55,7 +48,9 @@ namespace WebMVC.Controllers
                 }
                 else
                 {
-                    return await HandleErrorResponse(response);
+                    var message = await response.Content.ReadAsStringAsync();
+                    ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                    return View("Error");
                 }
             }
             catch
@@ -77,10 +72,17 @@ namespace WebMVC.Controllers
                 using var response = await client.PostAsJsonAsync(_urlApi, usuario); // POST directamente en /users
 
                 if (response.IsSuccessStatusCode)
+                {
                     return RedirectToAction("Index");
-
-                return await HandleErrorResponse(response);
+                }
+                else
+                {
+                    var message = await response.Content.ReadAsStringAsync();
+                    ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                    return View(usuario);
+                }
             }
+
             return View(usuario);
         }
 
@@ -98,7 +100,9 @@ namespace WebMVC.Controllers
                     return View(usuario);
                 }
 
-                return await HandleErrorResponse(response);
+                var message = await response.Content.ReadAsStringAsync();
+                ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                return View("Error");
             }
             catch
             {
@@ -116,10 +120,17 @@ namespace WebMVC.Controllers
                 using var response = await client.PutAsJsonAsync($"{_urlApi}/{usuario.Id}", usuario); // PUT en /users/{id}
 
                 if (response.IsSuccessStatusCode)
+                {
                     return RedirectToAction("Index");
-
-                return await HandleErrorResponse(response);
+                }
+                else
+                {
+                    var message = await response.Content.ReadAsStringAsync();
+                    ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                    return View(usuario);
+                }
             }
+
             return View(usuario);
         }
 
@@ -132,9 +143,13 @@ namespace WebMVC.Controllers
                 using var response = await client.DeleteAsync($"{_urlApi}/{id}"); // DELETE en /users/{id}
 
                 if (response.IsSuccessStatusCode)
+                {
                     return RedirectToAction("Index");
+                }
 
-                return await HandleErrorResponse(response);
+                var message = await response.Content.ReadAsStringAsync();
+                ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                return View("Error");
             }
             catch
             {
