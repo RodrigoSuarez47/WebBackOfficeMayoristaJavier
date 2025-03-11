@@ -1,10 +1,12 @@
 ﻿using DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using WebMVC.Filtros;
 
 namespace WebMVC.Controllers
 {
@@ -33,6 +35,7 @@ namespace WebMVC.Controllers
             return client;
         }
 
+        [UsuarioLogueado]
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -60,9 +63,11 @@ namespace WebMVC.Controllers
             }
         }
 
+        [UsuarioLogueado]
         [HttpGet]
         public IActionResult Create() => View();
 
+        [UsuarioLogueado]
         [HttpPost]
         public async Task<IActionResult> Create(UsuarioDTO usuario)
         {
@@ -86,6 +91,7 @@ namespace WebMVC.Controllers
             return View(usuario);
         }
 
+        [UsuarioLogueado]
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -111,6 +117,8 @@ namespace WebMVC.Controllers
             }
         }
 
+
+        [UsuarioLogueado]
         [HttpPost]
         public async Task<IActionResult> Edit(UsuarioDTO usuario)
         {
@@ -134,6 +142,7 @@ namespace WebMVC.Controllers
             return View(usuario);
         }
 
+        [UsuarioLogueado]
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -200,6 +209,7 @@ namespace WebMVC.Controllers
             return View("Login");
         }
 
+        [UsuarioLogueado]
         [HttpPost]
         public IActionResult Logout()
         {

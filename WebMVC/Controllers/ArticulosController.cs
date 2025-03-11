@@ -9,7 +9,9 @@ using System.Collections.ObjectModel;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using WebMVC.Filtros;
 
+[UsuarioLogueado]
 public class ArticulosController : Controller
 {
     private readonly IHttpClientFactory _httpClientFactory;

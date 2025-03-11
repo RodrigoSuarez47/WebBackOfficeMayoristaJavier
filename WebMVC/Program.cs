@@ -4,7 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout = TimeSpan.FromMinutes(120);
     options.Cookie.HttpOnly = true; // Protege contra XSS
     options.Cookie.IsEssential = true;
 });
@@ -27,8 +27,9 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthorization();
 
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Usuarios}/{action=Login}/{id?}");
+    pattern: "{controller=Usuarios}/{action=Login}");
 
 app.Run();

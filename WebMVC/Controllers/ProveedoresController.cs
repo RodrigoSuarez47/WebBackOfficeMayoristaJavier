@@ -4,9 +4,11 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http;
 using System.Threading.Tasks;
+using WebMVC.Filtros;
 
 namespace WebMVC.Controllers
 {
+    [UsuarioLogueado]
     public class ProveedoresController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;

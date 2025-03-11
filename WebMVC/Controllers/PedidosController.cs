@@ -6,9 +6,11 @@ using System.Net.Http.Headers;
 using WebMVC.Models;
 using System.Threading.Tasks;
 using DTOs;
+using WebMVC.Filtros;
 
 namespace WebMVC.Controllers
 {
+    [UsuarioLogueado]
     public class PedidosController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
