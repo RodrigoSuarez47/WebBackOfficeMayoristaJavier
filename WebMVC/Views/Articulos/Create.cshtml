@@ -139,7 +139,6 @@
                         <span asp-validation-for="SupplierId" class="text-danger"></span>
                     </div>
 
-
                     <!-- Venta por Peso -->
                     <div class="mb-3 form-check">
                         <input asp-for="IsSoldByWeight" class="form-check-input" type="checkbox" />
@@ -155,12 +154,14 @@
                             <i class="bi bi-eye me-1"></i> Visible para Clientes
                         </label>
                     </div>
+
                     <!-- Botón de envío -->
                     <div class="text-center">
                         <button type="submit" class="btn btn-outline-success w-100 animate__animated animate__fadeInUp">
                             <i class="bi bi-plus-lg"></i> Agregar Artículo
                         </button>
                     </div>
+
                     <span class="text-danger d-block text-center mt-2">@ViewBag.Mensaje</span>
                 </form>
             </div>
@@ -173,6 +174,19 @@
         <i class="bi bi-arrow-left"></i> Volver
     </a>
 </div>
+
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+        Swal.fire({
+            icon: "@ViewBag.AlertIcon",
+            title: "@ViewBag.AlertTitle",
+            text: mensaje,
+            confirmButtonColor: "#198754"
+        });
+    </script>
+}
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
@@ -273,8 +287,8 @@
                 warnings.push("No ingresó fecha de vencimiento.");
             }
             if (!proveedorId) {
-             warnings.push("No seleccionó Proveedor.");
-        }
+                warnings.push("No seleccionó Proveedor.");
+            }
             // Si hay advertencias, mostrar confirmación
             if (warnings.length > 0) {
                 event.preventDefault();
@@ -288,14 +302,7 @@
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Éxito',
-                            text: 'Artículo agregado exitosamente.',
-                            confirmButtonColor: "#198754"
-                        }).then(() => {
-                            event.target.submit();
-                        });
+                        event.target.submit();
                     }
                 });
                 return false;

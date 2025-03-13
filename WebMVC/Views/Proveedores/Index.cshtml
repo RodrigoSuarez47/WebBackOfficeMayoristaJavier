@@ -61,6 +61,20 @@
         </table>
     </div>
 
+    @if (ViewBag.Mensaje != null)
+    {
+        <script>
+            var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+
+            Swal.fire({
+                icon: "@ViewBag.AlertIcon",
+                title: "@ViewBag.AlertTitle",
+                text: mensaje,
+                confirmButtonColor: "#198754"
+            });
+        </script>
+    }
+
     <!-- Formulario oculto para eliminar proveedor -->
     <form id="deleteForm" method="post" style="display: none;">
         <input type="hidden" name="id" id="deleteProveedorId">

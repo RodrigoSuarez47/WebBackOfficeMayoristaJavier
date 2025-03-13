@@ -59,6 +59,21 @@
     </div>
 </div>
 
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+
+        Swal.fire({
+            icon: "@ViewBag.AlertIcon",
+            title: "@ViewBag.AlertTitle",
+            text: mensaje,
+            confirmButtonColor: "#198754"
+        });
+    </script>
+}
+
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
@@ -91,20 +106,6 @@
                 let loginCard = document.getElementById("loginCard");
                 let loadingScreen = document.getElementById("loadingScreen");
 
-                let username = document.getElementById("usernameInput").value.trim();
-                let password = document.getElementById("passwordInput").value.trim();
-
-                if (username === "" || password === "") {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Campos incompletos",
-                        text: "Por favor, ingrese su usuario y su contraseña.",
-                        confirmButtonColor: "#198754"
-                    });
-                    return;
-
-                }
-
                 // Ocultar formulario y mostrar animación de carga
                 loginCard.classList.add("animate__fadeOut");
                 setTimeout(() => {
@@ -118,18 +119,6 @@
                     event.target.submit();
                 }, 250);
             });
-
-            // Mostrar mensaje de error si existe
-            // Convertir ViewBag.Mensaje a UTF-8 correctamente
-        let mensaje = "@Html.Raw(ViewBag.Mensaje)";
-        if (mensaje && mensaje.trim() !== "") {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: mensaje,
-                confirmButtonColor: "#198754"
-            });
-        }
         });
     </script>
 

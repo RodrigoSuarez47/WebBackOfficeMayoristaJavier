@@ -64,11 +64,38 @@
     </div>
 </div>
 
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+
+        Swal.fire({
+            icon: "@ViewBag.AlertIcon",
+            title: "@ViewBag.AlertTitle",
+            text: mensaje,
+            confirmButtonColor: "#198754"
+        });
+    </script>
+}
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // Mostrar alerta de ViewBag.Mensaje si existe
+        @if (ViewBag.Mensaje != null)
+        {
+            <text>
+                        Swal.fire({
+                            icon: '@ViewBag.AlertIcon',
+                            title: '@ViewBag.AlertTitle',
+                            text: '@ViewBag.Mensaje',
+                            confirmButtonColor: '#198754'
+                        });
+            </text>
+        }
+
             // Mostrar/ocultar contraseña
             const togglePassword = document.querySelector(".toggle-password");
             const passwordInput = document.getElementById("passwordInput");

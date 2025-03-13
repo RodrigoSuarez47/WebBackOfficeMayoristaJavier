@@ -16,13 +16,16 @@ namespace WebMVC.Controllers
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IMemoryCache _memoryCache;
         private readonly string _urlApi;
+        private readonly string _urlApiArticulos;
         private readonly string _cacheKey = "ListaPedidos";
+        private readonly string _cacheKeyArticulos = "ListaArticulos";
 
         public PedidosController(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache, IConfiguration config)
         {
             _httpClientFactory = httpClientFactory;
             _memoryCache = memoryCache;
-            _urlApi = config.GetValue<string>("UrlAPI") + "Orders/"; // Asegúrate que la ruta esté correcta
+            _urlApi = config.GetValue<string>("UrlAPI") + "Orders/"; 
+            _urlApiArticulos = config.GetValue<string>("UrlAPI") + "Article/";
         }
 
         private HttpClient ConfigureClient()
@@ -38,22 +41,67 @@ namespace WebMVC.Controllers
             return client;
         }
 
+        private async Task<List<ArticuloDTO>> GetArticulos()
+        {
+            if (_memoryCache.TryGetValue(_cacheKeyArticulos, out List<ArticuloDTO> cachedArticulos))
+            {
+                return cachedArticulos;
+            }
+
+            try
+            {
+                var client = ConfigureClient();
+                var respuesta = await client.GetAsync(_urlApiArticulos).ConfigureAwait(false);
+
+                if (respuesta.IsSuccessStatusCode)
+                {
+                    string cuerpo = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var articulos = JsonConvert.DeserializeObject<List<ArticuloDTO>>(cuerpo);
+                    _memoryCache.Set(_cacheKeyArticulos, articulos, TimeSpan.FromMinutes(30));
+                    return articulos ?? new List<ArticuloDTO>();
+                }
+                else
+                {
+                    string errorResponse = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    ViewBag.AlertIcon = "error";
+                    ViewBag.AlertTitle = "Error";
+                    ViewBag.Mensaje = $"Error al cargar los articulos: {errorResponse}";
+                }
+            }
+            catch (Exception)
+            {
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
+                ViewBag.Mensaje = "Ocurrió un error al cargar los articulos.";
+            }
+
+            return new List<ArticuloDTO>();
+        }
+
         // GET: PedidosController
         public async Task<ActionResult> Index()
         {
-            // Primero intenta obtener la lista de pedidos desde la caché
-            if (!_memoryCache.TryGetValue(_cacheKey, out IEnumerable<PedidoDTO> pedidos))
+            try
             {
-                // Si no está en caché, realiza la llamada a la API para obtener los pedidos
-                pedidos = await GetPedidosFromApi();
+                // Primero intenta obtener la lista de pedidos desde la caché
+                if (!_memoryCache.TryGetValue(_cacheKey, out IEnumerable<PedidoDTO> pedidos))
+                {
+                    // Si no está en caché, realiza la llamada a la API para obtener los pedidos
+                    pedidos = await GetPedidosFromApi();
 
-                // Almacena los pedidos en caché con una expiración de 10 minutos
-                var cacheExpirationOptions = new MemoryCacheEntryOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
-                _memoryCache.Set(_cacheKey, pedidos, cacheExpirationOptions);
+                    // Almacena los pedidos en caché con una expiración de 10 minutos
+                    var cacheExpirationOptions = new MemoryCacheEntryOptions()
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
+                    _memoryCache.Set(_cacheKey, pedidos, cacheExpirationOptions);
+                }
+
+                return View(pedidos);
             }
-
-            return View(pedidos);
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Hubo un error al intentar obtener los pedidos.");
+                return View(new List<PedidoDTO>());
+            }
         }
 
         // Método para obtener los pedidos desde la API
@@ -62,7 +110,6 @@ namespace WebMVC.Controllers
             try
             {
                 var client = ConfigureClient();
-
                 var response = await client.GetAsync(_urlApi);
 
                 if (response.IsSuccessStatusCode)
@@ -73,13 +120,14 @@ namespace WebMVC.Controllers
                 }
                 else
                 {
-                    // Manejo de errores: Si la API responde con error
-                    throw new Exception($"Error al obtener pedidos: {response.ReasonPhrase}");
+                    // Si la API responde con error, lanzamos una excepción con el mensaje de error
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Error al obtener pedidos: {errorMessage}");
                 }
             }
             catch (Exception ex)
             {
-                // Manejo de excepciones: Log y re-lanzar error
+                // Manejo de errores: Si algo falla en la llamada a la API
                 throw new Exception("Hubo un error al intentar obtener los pedidos desde la API.", ex);
             }
         }
@@ -87,15 +135,23 @@ namespace WebMVC.Controllers
         // GET: PedidosController/Details/5
         public async Task<ActionResult> Details(int id)
         {
-            // Llamada a la API para obtener los detalles del pedido
-            var pedido = await GetPedidoFromApi(id);
-
-            if (pedido == null)
+            try
             {
-                return NotFound();
-            }
+                // Llamada a la API para obtener los detalles del pedido
+                var pedido = await GetPedidoFromApi(id);
 
-            return View(pedido);
+                if (pedido == null)
+                {
+                    return NotFound();
+                }
+
+                return View(pedido);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Hubo un error al intentar obtener los detalles del pedido.");
+                return View();
+            }
         }
 
         // Método para obtener un solo pedido desde la API
@@ -104,7 +160,6 @@ namespace WebMVC.Controllers
             try
             {
                 var client = ConfigureClient();
-
                 var response = await client.GetAsync($"{_urlApi}{id}");
 
                 if (response.IsSuccessStatusCode)
@@ -115,22 +170,25 @@ namespace WebMVC.Controllers
                 }
                 else
                 {
-                    // Manejo de errores: Si la API responde con error
-                    throw new Exception($"Error al obtener el pedido: {response.ReasonPhrase}");
+                    // Si la API responde con error, lanzamos una excepción
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Error al obtener el pedido: {errorMessage}");
                 }
             }
             catch (Exception ex)
             {
-                // Manejo de excepciones
                 throw new Exception("Hubo un error al intentar obtener el pedido desde la API.", ex);
             }
         }
 
         // GET: PedidosController/Create
-        public ActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            List<ArticuloDTO> articulos = await GetArticulos();
+            ViewBag.Articulos = articulos;
             return View();
         }
+
 
         // POST: PedidosController/Create
         [HttpPost]
@@ -142,7 +200,6 @@ namespace WebMVC.Controllers
                 {
                     // Llamada a la API para crear el pedido
                     var client = ConfigureClient();
-
                     var content = new StringContent(JsonConvert.SerializeObject(pedido), System.Text.Encoding.UTF8, "application/json");
                     var response = await client.PostAsync(_urlApi, content);
 
@@ -154,7 +211,9 @@ namespace WebMVC.Controllers
                     }
                     else
                     {
-                        throw new Exception($"Error al crear el pedido: {response.ReasonPhrase}");
+                        // Si la API responde con un error, muestra el mensaje
+                        var errorMessage = await response.Content.ReadAsStringAsync();
+                        ModelState.AddModelError("", $"Error al crear el pedido: {errorMessage}");
                     }
                 }
 
@@ -162,8 +221,8 @@ namespace WebMVC.Controllers
             }
             catch (Exception ex)
             {
-                // Manejo de excepciones: muestra el error en la vista
-                ModelState.AddModelError("", ex.Message);
+                // Manejo de excepciones
+                ModelState.AddModelError("", "Hubo un error inesperado al intentar crear el pedido.");
                 return View(pedido);
             }
         }
@@ -171,13 +230,21 @@ namespace WebMVC.Controllers
         // GET: PedidosController/Edit/5
         public async Task<ActionResult> Edit(int id)
         {
-            var pedido = await GetPedidoFromApi(id);
-            if (pedido == null)
+            try
             {
-                return NotFound();
-            }
+                var pedido = await GetPedidoFromApi(id);
+                if (pedido == null)
+                {
+                    return NotFound();
+                }
 
-            return View(pedido);
+                return View(pedido);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Hubo un error al intentar obtener el pedido para editar.");
+                return View();
+            }
         }
 
         // POST: PedidosController/Edit/5
@@ -189,7 +256,6 @@ namespace WebMVC.Controllers
                 if (ModelState.IsValid)
                 {
                     var client = ConfigureClient();
-
                     var content = new StringContent(JsonConvert.SerializeObject(pedido), System.Text.Encoding.UTF8, "application/json");
                     var response = await client.PutAsync($"{_urlApi}{id}", content);
 
@@ -201,7 +267,8 @@ namespace WebMVC.Controllers
                     }
                     else
                     {
-                        throw new Exception($"Error al actualizar el pedido: {response.ReasonPhrase}");
+                        var errorMessage = await response.Content.ReadAsStringAsync();
+                        ModelState.AddModelError("", $"Error al actualizar el pedido: {errorMessage}");
                     }
                 }
 
@@ -209,8 +276,7 @@ namespace WebMVC.Controllers
             }
             catch (Exception ex)
             {
-                // Manejo de excepciones
-                ModelState.AddModelError("", ex.Message);
+                ModelState.AddModelError("", "Hubo un error inesperado al intentar actualizar el pedido.");
                 return View(pedido);
             }
         }
@@ -218,13 +284,21 @@ namespace WebMVC.Controllers
         // GET: PedidosController/Delete/5
         public async Task<ActionResult> Delete(int id)
         {
-            var pedido = await GetPedidoFromApi(id);
-            if (pedido == null)
+            try
             {
-                return NotFound();
-            }
+                var pedido = await GetPedidoFromApi(id);
+                if (pedido == null)
+                {
+                    return NotFound();
+                }
 
-            return View(pedido);
+                return View(pedido);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Hubo un error al intentar obtener el pedido para eliminar.");
+                return View();
+            }
         }
 
         // POST: PedidosController/Delete/5
@@ -244,16 +318,17 @@ namespace WebMVC.Controllers
                 }
                 else
                 {
-                    throw new Exception($"Error al eliminar el pedido: {response.ReasonPhrase}");
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    ModelState.AddModelError("", $"Error al eliminar el pedido: {errorMessage}");
+                    return View();
                 }
             }
             catch (Exception ex)
             {
-                // Manejo de excepciones
-                ModelState.AddModelError("", ex.Message);
+                // Si ocurre un error inesperado, mostramos un mensaje genérico
+                ModelState.AddModelError("", "Hubo un error al eliminar el pedido.");
                 return View();
             }
         }
     }
 }
-

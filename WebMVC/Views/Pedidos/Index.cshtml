@@ -1,59 +1,227 @@
 ﻿@model IEnumerable<DTOs.PedidoDTO>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Pedidos";
 }
 
-<h1>Index</h1>
+<h1 class="text-center my-4 animate__animated animate__fadeInDown">
+    <i class="bi bi-clipboard-check"></i> Listado de Pedidos
+</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Id)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OrderDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Customer)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Total)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.OrderDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Customer)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Total)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
-            </td>
-        </tr>
+<div class="container">
+    <!-- Barra de búsqueda y botón para crear pedido -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 animate__animated animate__fadeInUp">
+        <div class="input-group shadow-sm" style="max-width: 400px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchOrder" class="form-control" placeholder="Buscar pedido...">
+        </div>
+        <a class="btn btn-outline-success shadow-sm d-flex align-items-center gap-2" asp-action="Create"
+           aria-label="Crear nuevo pedido" title="Crear Pedido">
+            <i class="bi bi-clipboard-plus"></i> <span>Crear Pedido</span>
+        </a>
+    </div>
+
+    <!-- Tabla de pedidos -->
+    <div class="table-responsive">
+        <table class="table table-hover table-striped table-bordered text-center shadow-sm rounded-3" id="ordersTable">
+            <thead class="table-dark">
+                <tr>
+                    <th style="cursor: pointer;" onclick="sortTable(0, this)">
+                        <i class="bi bi-hash"></i> Id
+                    </th>
+                    <th style="cursor: pointer;" onclick="sortTable(1, this)">
+                        <i class="bi bi-calendar-check"></i> Fecha
+                    </th>
+                    <th style="cursor: pointer;" onclick="sortTable(2, this)">
+                        <i class="bi bi-person"></i> Cliente
+                    </th>
+                    <th style="cursor: pointer;" onclick="sortTable(3, this)">
+                        <i class="bi bi-cash-stack"></i> Total
+                    </th>
+                    <th style="cursor: pointer;" onclick="sortTable(4, this)">
+                        <i class="bi bi-info-circle"></i> Estado
+                    </th>
+                    <th>
+                        <i class="bi bi-gear"></i> Acciones
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="ordersBody">
+                @foreach (var pedido in Model)
+                {
+                    <tr class="animate__animated animate__fadeIn">
+                        <td data-sort="@pedido.Id">@pedido.Id</td>
+                        <td data-sort="@pedido.OrderDate">@pedido.OrderDate.ToString("dd/MM/yyyy")</td>
+                        <td data-sort="@pedido.Customer">@pedido.Customer</td>
+                        <td data-sort="@pedido.Total">@pedido.Total?.ToString("C")</td>
+                        <td data-sort="@pedido.Status">@pedido.Status</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <!-- Botón para marcar como entregado -->
+                                @if (pedido.Status != "Entregado")
+                                {
+                                    <button type="button" class="btn btn-outline-success btn-sm"
+                                            data-id="@pedido.Id"
+                                            onclick="markAsDelivered(this)"
+                                            aria-label="Marcar pedido como entregado" title="Marcar como entregado">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-success btn-sm" disabled
+                                            aria-label="Pedido entregado" title="Pedido entregado">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    </button>
+                                }
+                                <!-- Botón para agregar artículo -->
+                                <a class="btn btn-success btn-sm"
+                                   asp-action="AddArticle" asp-route-id="@pedido.Id"
+                                   aria-label="Agregar artículo al pedido" title="Agregar Artículo">
+                                    <i class="bi bi-plus-circle"></i>
+                                </a>
+                                <!-- Botón para quitar artículo -->
+                                <a class="btn btn-danger btn-sm"
+                                   asp-action="RemoveArticle" asp-route-id="@pedido.Id"
+                                   aria-label="Quitar artículo del pedido" title="Quitar Artículo">
+                                    <i class="bi bi-dash-circle"></i>
+                                </a>
+                                <!-- Botón clásico Editar -->
+                                <a class="btn btn-secondary btn-sm"
+                                   asp-action="Edit" asp-route-id="@pedido.Id"
+                                   aria-label="Editar pedido" title="Editar">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <!-- Botón clásico Eliminar -->
+                                <button type="button" class="btn btn-danger btn-sm delete-btn"
+                                        data-id="@pedido.Id"
+                                        aria-label="Eliminar pedido" title="Eliminar">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                                <!-- Botón para ver Detalles -->
+                                <a class="btn btn-primary btn-sm"
+                                   asp-action="Details" asp-route-id="@pedido.Id"
+                                   aria-label="Ver detalles del pedido" title="Detalles">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Filtrado de pedidos por búsqueda (cliente o estado)
+        document.getElementById('searchOrder').addEventListener('input', function () {
+            var search = this.value.toLowerCase();
+            var rows = document.querySelectorAll('#ordersBody tr');
+            rows.forEach(function (row) {
+                var cliente = row.cells[2].textContent.toLowerCase();
+                var estado = row.cells[4].textContent.toLowerCase();
+                row.style.display = (cliente.includes(search) || estado.includes(search)) ? '' : 'none';
+            });
+        });
+
+        // Función para marcar el pedido como entregado
+        function markAsDelivered(button) {
+            var pedidoId = button.getAttribute("data-id");
+            Swal.fire({
+                title: "¿Marcar como entregado?",
+                text: "El pedido se marcará como entregado.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#28a745",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText: "Sí, marcar",
+                cancelButtonText: "Cancelar"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let form = document.createElement("form");
+                    form.method = "post";
+                    form.action = "/Pedidos/MarkAsDelivered"; // Acción en el controlador
+                    form.style.display = "none";
+
+                    let input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = "id";
+                    input.value = pedidoId;
+
+                    form.appendChild(input);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        // Función de ordenamiento (similar a la de la vista de Artículos)
+        let lastSortedColumn = null;
+        let ascending = true;
+        function sortTable(columnIndex, header) {
+            var table = document.getElementById("ordersTable");
+            var tbody = table.getElementsByTagName("tbody")[0];
+            var rows = Array.from(tbody.getElementsByTagName("tr"));
+
+            if (lastSortedColumn === columnIndex) {
+                ascending = !ascending;
+            } else {
+                ascending = true;
+            }
+
+            rows.sort(function (a, b) {
+                var cellA = a.cells[columnIndex];
+                var cellB = b.cells[columnIndex];
+                var aValue = cellA.getAttribute("data-sort") || cellA.textContent.trim().toLowerCase();
+                var bValue = cellB.getAttribute("data-sort") || cellB.textContent.trim().toLowerCase();
+
+                if (!isNaN(parseFloat(aValue)) && !isNaN(parseFloat(bValue))) {
+                    return ascending ? parseFloat(aValue) - parseFloat(bValue) : parseFloat(bValue) - parseFloat(aValue);
+                }
+                return ascending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            });
+
+            tbody.innerHTML = "";
+            rows.forEach(row => tbody.appendChild(row));
+            document.querySelectorAll("th").forEach(th => th.classList.remove("table-secondary"));
+            header.classList.add("table-secondary");
+            lastSortedColumn = columnIndex;
+        }
+
+        // Función para eliminar pedido (similar a la vista de Artículos)
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", function (event) {
+                event.preventDefault();
+                let pedidoId = this.getAttribute("data-id");
+                Swal.fire({
+                    title: "¿Estás seguro?",
+                    text: "Esta acción no se puede deshacer.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        let form = document.createElement("form");
+                        form.method = "post";
+                        form.action = "/Pedidos/Delete";
+                        form.style.display = "none";
+
+                        let input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = "id";
+                        input.value = pedidoId;
+
+                        form.appendChild(input);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
 }
-    </tbody>
-</table>

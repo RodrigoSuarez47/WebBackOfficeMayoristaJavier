@@ -53,12 +53,16 @@ namespace WebMVC.Controllers
                 {
                     var message = await response.Content.ReadAsStringAsync();
                     ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                    ViewBag.AlertIcon = "error";
+                    ViewBag.AlertTitle = "Error";
                     return View("Error");
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                ViewBag.Mensaje = "Error al obtener la lista de usuarios.";
+                ViewBag.Mensaje = $"Error al obtener la lista de usuarios: {ex.Message}";
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
                 return View(new List<UsuarioDTO>());
             }
         }
@@ -73,17 +77,32 @@ namespace WebMVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                var client = ConfigureClient();
-                using var response = await client.PostAsJsonAsync(_urlApi, usuario); // POST directamente en /users
+                try
+                {
+                    var client = ConfigureClient();
+                    using var response = await client.PostAsJsonAsync(_urlApi, usuario); // POST directamente en /users
 
-                if (response.IsSuccessStatusCode)
-                {
-                    return RedirectToAction("Index");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        ViewBag.Mensaje = "Usuario creado con éxito";
+                        ViewBag.AlertIcon = "success";
+                        ViewBag.AlertTitle = "¡Éxito!";
+                        return RedirectToAction("Index");
+                    }
+                    else
+                    {
+                        var message = await response.Content.ReadAsStringAsync();
+                        ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                        ViewBag.AlertIcon = "error";
+                        ViewBag.AlertTitle = "Error";
+                        return View(usuario);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    var message = await response.Content.ReadAsStringAsync();
-                    ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                    ViewBag.Mensaje = $"Error al crear el usuario: {ex.Message}";
+                    ViewBag.AlertIcon = "error";
+                    ViewBag.AlertTitle = "Error";
                     return View(usuario);
                 }
             }
@@ -108,15 +127,18 @@ namespace WebMVC.Controllers
 
                 var message = await response.Content.ReadAsStringAsync();
                 ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
                 return View("Error");
             }
-            catch
+            catch (Exception ex)
             {
-                ViewBag.Mensaje = "Error al obtener el usuario.";
+                ViewBag.Mensaje = $"Error al obtener el usuario: {ex.Message}";
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
                 return RedirectToAction("Index");
             }
         }
-
 
         [UsuarioLogueado]
         [HttpPost]
@@ -124,17 +146,32 @@ namespace WebMVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                var client = ConfigureClient();
-                using var response = await client.PutAsJsonAsync($"{_urlApi}/{usuario.Id}", usuario); // PUT en /users/{id}
+                try
+                {
+                    var client = ConfigureClient();
+                    using var response = await client.PutAsJsonAsync($"{_urlApi}/{usuario.Id}", usuario); // PUT en /users/{id}
 
-                if (response.IsSuccessStatusCode)
-                {
-                    return RedirectToAction("Index");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        ViewBag.Mensaje = "Usuario actualizado con éxito";
+                        ViewBag.AlertIcon = "success";
+                        ViewBag.AlertTitle = "¡Éxito!";
+                        return RedirectToAction("Index");
+                    }
+                    else
+                    {
+                        var message = await response.Content.ReadAsStringAsync();
+                        ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                        ViewBag.AlertIcon = "error";
+                        ViewBag.AlertTitle = "Error";
+                        return View(usuario);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    var message = await response.Content.ReadAsStringAsync();
-                    ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                    ViewBag.Mensaje = $"Error al actualizar el usuario: {ex.Message}";
+                    ViewBag.AlertIcon = "error";
+                    ViewBag.AlertTitle = "Error";
                     return View(usuario);
                 }
             }
@@ -153,16 +190,23 @@ namespace WebMVC.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
+                    ViewBag.Mensaje = "Usuario eliminado con éxito";
+                    ViewBag.AlertIcon = "success";
+                    ViewBag.AlertTitle = "¡Éxito!";
                     return RedirectToAction("Index");
                 }
 
                 var message = await response.Content.ReadAsStringAsync();
                 ViewBag.Mensaje = string.IsNullOrEmpty(message) ? "Error desconocido" : message;
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
                 return View("Error");
             }
-            catch
+            catch (Exception ex)
             {
-                ViewBag.Mensaje = "Error interno al eliminar el usuario.";
+                ViewBag.Mensaje = $"Error interno al eliminar el usuario: {ex.Message}";
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
                 return RedirectToAction("Index");
             }
         }
@@ -175,7 +219,9 @@ namespace WebMVC.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.Mensaje = "Error, debe ingresar Email y Contraseña";
+                ViewBag.Mensaje = "Error, debe ingresar Usuario y Contraseña";
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
                 return View("Login");
             }
 
@@ -193,19 +239,24 @@ namespace WebMVC.Controllers
                         HttpContext.Session.SetString("Nombre", usuarioLogueado.Name);
                         return RedirectToAction("List", "Articulos");
                     }
-                    ViewBag.Mensaje = "Email o Contraseña incorrectos";
+                    ViewBag.Mensaje = "Usuario o Contraseña incorrectos";
+                    ViewBag.AlertIcon = "error";
+                    ViewBag.AlertTitle = "Error";
                 }
                 else
                 {
                     var cuerpo = await response.Content.ReadAsStringAsync();
                     ViewBag.Mensaje = cuerpo;
+                    ViewBag.AlertIcon = "error";
+                    ViewBag.AlertTitle = "Error";
                 }
             }
             catch (Exception ex)
             {
-                ViewBag.Mensaje = "Error interno. Inténtelo más tarde";
+                ViewBag.Mensaje = $"Error interno al iniciar sesión: {ex.Message}";
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
             }
-
             return View("Login");
         }
 
@@ -218,14 +269,21 @@ namespace WebMVC.Controllers
                 if (!string.IsNullOrEmpty(HttpContext.Session.GetString("Token")))
                 {
                     HttpContext.Session.Clear();
+                    ViewBag.Mensaje = "Sesión cerrada con éxito";
+                    ViewBag.AlertIcon = "success";
+                    ViewBag.AlertTitle = "¡Éxito!";
                     return RedirectToAction("Login");
                 }
 
                 ViewBag.Mensaje = "Error al cerrar sesión";
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
             }
-            catch
+            catch (Exception ex)
             {
-                ViewBag.Mensaje = "Error interno. Inténtelo más tarde.";
+                ViewBag.Mensaje = $"Error interno al cerrar sesión: {ex.Message}";
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
             }
 
             return RedirectToAction("Index");

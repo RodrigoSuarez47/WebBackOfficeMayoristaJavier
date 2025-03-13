@@ -55,12 +55,27 @@
     </a>
 </div>
 
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+
+        Swal.fire({
+            icon: "@ViewBag.AlertIcon",
+            title: "@ViewBag.AlertTitle",
+            text: mensaje,
+            confirmButtonColor: "#198754"
+        });
+    </script>
+}
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
     <script>
-        // Mostrar/ocultar contraseña
         document.addEventListener("DOMContentLoaded", function () {
+
+            // Mostrar/ocultar contraseña
             const passwordField = document.getElementById("passwordField");
             const togglePassword = document.getElementById("togglePassword");
 
@@ -91,7 +106,7 @@
                     Swal.fire({
                         icon: 'error',
                         title: '',
-                        text: errors,
+                        text: errors.join(" "),
                     });
                     event.preventDefault();
                     return false; // Detener el envío del formulario

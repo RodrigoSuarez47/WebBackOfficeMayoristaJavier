@@ -1,10 +1,10 @@
 ﻿@model IEnumerable<DTOs.ArticuloDTO>
-@Html.AntiForgeryToken()
 
 @{
     ViewData["Title"] = "Artículos";
 }
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/css/bootstrap-select.min.css" integrity="sha512-m2XU7+Liqx7SykF0osDJzvPJzq2G5afqWTLWYWc9H9SkSlgYuY4koYhCb5p1Ok6I1YTrTWQKpNUEYbqlKgbkrA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <h1 class="text-center my-4 animate__animated animate__fadeInDown">
     <i class="bi bi-box-seam"></i> Listado de Artículos
 </h1>
@@ -15,8 +15,20 @@
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" id="searchString" class="form-control" placeholder="Buscar artículo...">
         </div>
+        <div class="input-group shadow-sm" style="max-width: 300px;">
+            <span class="input-group-text"><i class="bi bi-truck"></i></span>
+            <!-- Se agregó data-live-search y la clase selectpicker -->
+            <select id="filterProvider" class="form-select selectpicker" data-live-search="true">
+                <option value="">Todos los proveedores</option>
+                @foreach (var proveedor in ViewBag.Proveedores)
+                {
+                    <option value="@proveedor.Id">@proveedor.Name</option>
+                }
+            </select>
+        </div>
 
-        <a class="btn btn-outline-success shadow-sm d-flex align-items-center gap-2" asp-action="Create">
+        <a class="btn btn-outline-success shadow-sm d-flex align-items-center gap-2" asp-action="Create"
+           aria-label="Agregar nuevo artículo" title="Agregar Artículo">
             <i class="bi bi-plus-lg"></i> <span>Agregar Artículo</span>
         </a>
     </div>
@@ -26,60 +38,100 @@
         <table class="table table-hover table-striped table-bordered text-center shadow-sm rounded-3" id="articlesTable">
             <thead class="table-dark">
                 <tr>
-                    <th onclick="sortTable(0, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-hash"></i> Id</span></th>
-                    <th class="col-2"><span class="d-flex align-items-center gap-1"><i class="bi bi-card-image"></i> Imagen</span></th>
-                    <th onclick="sortTable(2, this)" class="col-3"><span class="d-flex align-items-center gap-1"><i class="bi bi-tag"></i> Nombre</span></th>
-                    <th onclick="sortTable(3, this)" class="col-4"><span class="d-flex align-items-center gap-1"><i class="bi bi-card-text"></i> Descripción</span></th>
-                    <th onclick="sortTable(4, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-cash"></i> Compra</span></th>
-                    <th onclick="sortTable(5, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-cash"></i> Mayor</span></th>
-                    <th onclick="sortTable(6, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-cash"></i> Unidad</span></th>
-                    <th onclick="sortTable(7, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-cart-plus"></i> Mínimo</span></th>
-                    <th onclick="sortTable(8, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-boxes"></i> Stock</span></th>
-                    <th onclick="sortTable(9, this)" class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-calendar-x"></i> Vencimiento</span></th>
-                    <th class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-eye"></i> Visible</span></th> 
-@*                     
-                    <th class="col-2"><span class="d-flex align-items-center gap-1"><i class="bi bi-person"></i> Proveedor</span></th> <!-- Nueva columna Proveedor -->
-                    <th class="col-2"><span class="d-flex align-items-center gap-1"><i class="bi bi-building"></i> Compañía</span></th> <!-- Nueva columna Compañía --> *@
-                    <th class="col-1"><span class="d-flex align-items-center gap-1"><i class="bi bi-gear"></i> Acciones</span></th>
+                    <th onclick="sortTable(0, this)" class="col-1" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-hash"></i> Id</span>
+                    </th>
+                    <th class="col-2">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-card-image"></i> Imagen</span>
+                    </th>
+                    <th onclick="sortTable(2, this)" class="col-3" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-tag"></i> Nombre</span>
+                    </th>
+                    <th onclick="sortTable(3, this)" class="col-4" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-card-text"></i> Descripción</span>
+                    </th>
+                    <th onclick="sortTable(4, this)" class="col-1" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-cash-stack"></i> Compra</span>
+                    </th>
+                    <th onclick="sortTable(5, this)" class="col-1" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-cash-stack"></i> Mayor</span>
+                    </th>
+                    <th onclick="sortTable(6, this)" class="col-1" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-cash-stack"></i> Unidad</span>
+                    </th>
+                    <th onclick="sortTable(7, this)" class="col-1" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-cart-plus"></i> Mínimo</span>
+                    </th>
+                    <th onclick="sortTable(8, this)" class="col-1" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-boxes"></i> Stock</span>
+                    </th>
+                    <th onclick="sortTable(9, this)" class="col-1" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-calendar-x"></i> Vencimiento</span>
+                    </th>
+                    <th onclick="sortTable(10, this)" class="col-1" style="cursor:pointer;">
+                        <span class="d-flex align-items-center gap-1"><i class="bi bi-eye"></i> Visible</span>
+                    </th>
+                    <th class="col-1">
+                        <span class="d-flex align-items-center justify-content-center gap-1"><i class="bi bi-gear"></i> Acciones</span>
+                    </th>
                 </tr>
             </thead>
-
             <tbody id="articlesBody">
                 @foreach (var item in Model)
                 {
-                    <tr class="align-middle animate__animated animate__fadeIn">
-                        <td>@Html.DisplayFor(modelItem => item.Id)</td>
-                        <td>
+                    <tr data-provider="@item.SupplierId" class="align-middle animate__animated animate__fadeIn">
+                        <td class="text-center" data-sort="@item.Id">@Html.DisplayFor(modelItem => item.Id)</td>
+                        <td class="text-center">
                             <img src="@item.ImageUrl" alt="Imagen de @item.Name" class="img-thumbnail rounded-3 shadow-sm" style="max-width: 60px; max-height: 60px;" />
                         </td>
-                        <td>@Html.DisplayFor(modelItem => item.Name)</td>
-                        <td>@Html.DisplayFor(modelItem => item.Description)</td>
-                        <td class="text-end">@Html.DisplayFor(modelItem => item.PurchasePrice)</td>
-                        <td class="text-end">@Html.DisplayFor(modelItem => item.SalePrice)</td>
-                        <td class="text-end">@Html.DisplayFor(modelItem => item.UnitSalePrice)</td>
-                        <td class="text-center">@Html.DisplayFor(modelItem => item.MinimumPurchase)</td>
-                        <td class="text-center">@Html.DisplayFor(modelItem => item.Stock)</td>
-                        <td class="text-center">@Html.DisplayFor(modelItem => item.ExpirationDate)</td>
-                        <td class="text-center">
-                            @if (item.IsVisible)
-                            {
-                                <span class="badge bg-success">Sí</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger">No</span>
-                            }
+                        <td class="text-center" data-sort="@item.Name">@Html.DisplayFor(modelItem => item.Name)</td>
+                        <td class="text-center" data-sort="@item.Description">@Html.DisplayFor(modelItem => item.Description)</td>
+                        <td class="text-center" data-sort="@item.PurchasePrice">@item.PurchasePrice.ToString("0")</td>
+                        <td class="text-center" data-sort="@item.SalePrice">@item.SalePrice.ToString("0")</td>
+                        <td class="text-center" data-sort="@item.UnitSalePrice">@item.UnitSalePrice.ToString("0")</td>
+                        <td class="text-center" data-sort="@item.MinimumPurchase">@Html.DisplayFor(modelItem => item.MinimumPurchase)</td>
+                        <td class="text-center" data-sort="@item.Stock">@Html.DisplayFor(modelItem => item.Stock)</td>
+                        <td class="text-center" data-sort="@item.ExpirationDate">@Html.DisplayFor(modelItem => item.ExpirationDate)</td>
+                        <td class="text-center" data-sort="@(item.IsVisible ? 1 : 0)">
+                            <button class="btn btn-sm @(item.IsVisible ? "btn-success" : "btn-danger") shadow-sm"
+                                    data-id="@item.Id"
+                                    onclick="toggleVisibility(this)"
+                                    aria-label="@(item.IsVisible ? "Ocultar artículo" : "Mostrar artículo")"
+                                    title="@(item.IsVisible ? "Ocultar" : "Mostrar")">
+                                <i class="bi @(item.IsVisible ? "bi-eye" : "bi-eye-slash")"></i>
+                            </button>
                         </td>
-                        @* 
-                         <td>@item.Supplier?.Name</td> <!-- Proveedor -->
-                        <td>@item.Supplier?.CompanyName</td> <!-- Compañía --> *@
                         <td>
-                            <div class="btn-group">
-                                <a class="btn btn-sm btn-outline-secondary shadow-sm" asp-action="Edit" asp-route-id="@item.Id">
-                                    <i class="bi bi-pencil-square"></i> Editar
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-warning shadow-sm"
+                                        data-id="@item.Id"
+                                        data-purchase="@item.PurchasePrice"
+                                        data-sale="@item.SalePrice"
+                                        data-unit="@item.UnitSalePrice"
+                                        onclick="modifyPrices(this)"
+                                        aria-label="Actualizar precios de @item.Name"
+                                        title="Actualizar Precios">
+                                    <i class="bi bi-cash-stack"></i>
+                                </button>
+                                <button class="btn btn-primary shadow-sm"
+                                        data-id="@item.Id"
+                                        data-stock="@item.Stock"
+                                        onclick="modifyStock(this)"
+                                        aria-label="Modificar stock de @item.Name"
+                                        title="Modificar Stock">
+                                    <i class="bi bi-boxes"></i>
+                                </button>
+                                <a class="btn btn-secondary shadow-sm"
+                                   asp-action="Edit" asp-route-id="@item.Id"
+                                   aria-label="Editar artículo @item.Name"
+                                   title="Editar Artículo">
+                                    <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline-danger shadow-sm delete-btn" data-id="@item.Id">
-                                    <i class="bi bi-trash3"></i> Eliminar
+                                <button class="btn btn-danger shadow-sm delete-btn"
+                                        data-id="@item.Id"
+                                        aria-label="Eliminar artículo @item.Name"
+                                        title="Eliminar Artículo">
+                                    <i class="bi bi-trash3"></i>
                                 </button>
                             </div>
                         </td>
@@ -90,8 +142,202 @@
     </div>
 </div>
 
-@section Scripts {
+@if (ViewBag.Mensaje != null)
+{
     <script>
+        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+        Swal.fire({
+            icon: "@ViewBag.AlertIcon",
+            title: "@ViewBag.AlertTitle",
+            text: mensaje,
+            confirmButtonColor: "#198754"
+        });
+    </script>
+}
+
+<!-- Modal de Modificar Stock sin backdrop -->
+<div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-center w-100" id="stockModalLabel">
+                    <i class="bi bi-boxes me-2"></i>Modificar Stock
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="stockForm" method="post" action="@Url.Action("ModificarStock", "Articulos")">
+                    <input type="hidden" id="articleId" name="articleId" />
+                    <div class="mb-3">
+                        <label for="newStock" class="form-label">
+                            <i class="bi bi-box me-1"></i>
+                            Stock Actual
+                        </label>
+                        <input type="number" class="form-control" id="newStock" name="newStock" required min="0" placeholder="Ingrese stock" />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-outline-primary" aria-label="Confirmar modificación de stock" title="Modificar Stock">
+                            <i class="bi bi-save me-1"></i> Modificar
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Asegúrate de ingresar un valor válido.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Actualizar Precios sin backdrop -->
+<div class="modal fade" id="priceModal" tabindex="-1" aria-labelledby="priceModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title text-center w-100" id="priceModalLabel">
+                    <i class="bi bi-cash-stack me-2"></i> Actualizar Precios
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="priceForm" method="post" action="@Url.Action("ModificarPrecios", "Articulos")">
+                    <input type="hidden" id="priceArticleId" name="articleId" />
+                    <div class="mb-3">
+                        <label for="purchasePrice" class="form-label">
+                            <i class="bi bi-cash"></i> Precio de Compra
+                        </label>
+                        <input type="number" class="form-control" id="purchasePrice" name="purchasePrice" required min="0" step="0.01" placeholder="Ingrese precio de compra" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="salePrice" class="form-label">
+                            <i class="bi bi-cash"></i> Precio de Venta
+                        </label>
+                        <input type="number" class="form-control" id="salePrice" name="salePrice" required min="0" step="0.01" placeholder="Ingrese precio de venta" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="unitSalePrice" class="form-label">
+                            <i class="bi bi-cash"></i> Precio Unitario
+                        </label>
+                        <input type="number" class="form-control" id="unitSalePrice" name="unitSalePrice" required min="0" step="0.01" placeholder="Ingrese precio unitario" />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning" aria-label="Confirmar actualización de precios" title="Actualizar Precios">
+                            <i class="bi bi-save me-1"></i> Actualizar
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Verifica los valores antes de actualizar.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Recurso de bootstrap-select (si no está incluido globalmente) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/js/bootstrap-select.min.js" integrity="sha512-F7+4i0zOCZHxUIyQFuzElrUCP6ISuWVL+JtYJ5nwNGf/7hFq5sNj8cCkD3I1c2fqWDlyutFZH6MZx3x0h7+POw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        // Inicializar el plugin bootstrap-select para el filtro de proveedores
+        $(document).ready(function () {
+            $('.selectpicker').selectpicker();
+        });
+
+        // Función para unificar el filtrado de búsqueda por nombre, descripción y proveedor
+        function filterArticles() {
+            var searchString = document.getElementById('searchString').value.toLowerCase();
+            var selectedProvider = document.getElementById('filterProvider').value;
+            var articles = document.querySelectorAll('#articlesBody tr');
+
+            articles.forEach(function (article) {
+                // Se asume que la columna 3 es Nombre y la 4 es Descripción
+                var name = article.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                var description = article.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                var providerId = article.getAttribute('data-provider');
+
+                // Si se ha seleccionado un proveedor, debe coincidir; de lo contrario se ignora
+                var matchesProvider = selectedProvider === "" || providerId === selectedProvider;
+                var matchesSearch = name.includes(searchString) || description.includes(searchString);
+
+                article.style.display = (matchesProvider && matchesSearch) ? '' : 'none';
+            });
+        }
+
+        // Asignar la función de filtrado a ambos controles
+        document.getElementById('searchString').addEventListener('input', filterArticles);
+        document.getElementById('filterProvider').addEventListener('change', filterArticles);
+
+        // Función que se llama al hacer clic en el botón para modificar el stock
+        function modifyStock(button) {
+            var articleId = button.getAttribute("data-id");
+            var currentStock = button.getAttribute("data-stock");
+
+            // Llenar el formulario con los datos actuales
+            document.getElementById("articleId").value = articleId;
+            document.getElementById("newStock").value = currentStock;
+
+            // Mostrar el modal usando Bootstrap 5
+            var stockModal = new bootstrap.Modal(document.getElementById('stockModal'));
+            stockModal.show();
+        }
+
+        // Función para llenar el modal de precios y mostrarlo
+        function modifyPrices(button) {
+            var articleId = button.getAttribute("data-id");
+            var purchasePrice = button.getAttribute("data-purchase");
+            var salePrice = button.getAttribute("data-sale");
+            var unitSalePrice = button.getAttribute("data-unit");
+
+            // Llenar los campos del formulario
+            document.getElementById("priceArticleId").value = articleId;
+            document.getElementById("purchasePrice").value = purchasePrice;
+            document.getElementById("salePrice").value = salePrice;
+            document.getElementById("unitSalePrice").value = unitSalePrice;
+
+            // Mostrar el modal usando Bootstrap 5
+            var priceModal = new bootstrap.Modal(document.getElementById('priceModal'));
+            priceModal.show();
+        }
+
+        // Cambiar visibilidad de artículo
+        function toggleVisibility(button) {
+            var articleId = button.getAttribute("data-id");
+            var currentVisibility = button.classList.contains("btn-success"); // Visible si tiene btn-success
+
+            Swal.fire({
+                title: currentVisibility ? "¿Desactivar visibilidad?" : "¿Activar visibilidad?",
+                text: currentVisibility ? "Este artículo dejará de ser visible." : "Este artículo será visible para los usuarios.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: currentVisibility ? "#dc3545" : "#28a745",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText: currentVisibility ? "Desactivar" : "Activar",
+                cancelButtonText: "Cancelar"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Crear un formulario para enviar la solicitud al controlador
+                    let form = document.createElement("form");
+                    form.method = "post";
+                    form.action = "/Articulos/CambiarVisibilidad";
+                    form.style.display = "none";
+
+                    let input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = "id";  // Parámetro del controlador
+                    input.value = articleId;
+
+                    form.appendChild(input);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        // Ordenamiento de la tabla utilizando data-sort si existe
         let lastSortedColumn = null;
         let ascending = true;
 
@@ -107,35 +353,31 @@
             }
 
             rows.sort(function (a, b) {
-                var aText = a.cells[columnIndex].textContent.trim().toLowerCase();
-                var bText = b.cells[columnIndex].textContent.trim().toLowerCase();
+                var cellA = a.cells[columnIndex];
+                var cellB = b.cells[columnIndex];
 
-                if (!isNaN(parseFloat(aText)) && !isNaN(parseFloat(bText))) {
-                    return ascending ? aText - bText : bText - aText;
+                // Se intenta leer el atributo data-sort, si no existe se usa el texto
+                var aValue = cellA.getAttribute("data-sort") || cellA.textContent.trim().toLowerCase();
+                var bValue = cellB.getAttribute("data-sort") || cellB.textContent.trim().toLowerCase();
+
+                // Si ambos valores son numéricos, comparar como números
+                if (!isNaN(parseFloat(aValue)) && !isNaN(parseFloat(bValue))) {
+                    return ascending ? parseFloat(aValue) - parseFloat(bValue) : parseFloat(bValue) - parseFloat(aValue);
                 }
-                return ascending ? aText.localeCompare(bText) : bText.localeCompare(aText);
+                // Comparación de texto
+                return ascending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
             });
 
+            // Reordenar las filas
             tbody.innerHTML = "";
             rows.forEach(row => tbody.appendChild(row));
 
+            // Marcar la cabecera activa
             document.querySelectorAll("th").forEach(th => th.classList.remove("table-secondary"));
             header.classList.add("table-secondary");
 
             lastSortedColumn = columnIndex;
         }
-
-        document.getElementById('searchString').addEventListener('input', function () {
-            var searchString = this.value.toLowerCase();
-            var articles = document.querySelectorAll('#articlesBody tr');
-
-            articles.forEach(function (article) {
-                var name = article.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                var description = article.querySelector('td:nth-child(4)').textContent.toLowerCase();
-
-                article.style.display = (name.includes(searchString) || description.includes(searchString)) ? '' : 'none';
-            });
-        });
 
         document.querySelectorAll(".delete-btn").forEach(button => {
             button.addEventListener("click", function (event) {
@@ -171,4 +413,10 @@
             });
         });
     </script>
+    <style>
+        /* Ajustar el fondo del modal para que sea menos oscuro */
+        .modal-backdrop.show {
+            background-color: rgba(0, 0, 0, 0.3) !important;
+        }
+    </style>
 }

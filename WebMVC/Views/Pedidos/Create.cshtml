@@ -1,53 +1,262 @@
 ﻿@model DTOs.PedidoDTO
-
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Crear Pedido";
 }
 
-<h1>Create</h1>
+<h1 class="text-center my-4 animate__animated animate__fadeInDown">
+    <i class="bi bi-clipboard-plus"></i> Pedido
+</h1>
 
-<h4>PedidoDTO</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Id" class="control-label"></label>
-                <input asp-for="Id" class="form-control" />
-                <span asp-validation-for="Id" class="text-danger"></span>
+<div class="container">
+    <form asp-action="Create" id="pedidoForm" novalidate>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <!-- Datos del Pedido -->
+        <div class="mb-3 visually-hidden">
+            <label asp-for="OrderDate" class="form-label">
+                <i class="bi bi-calendar-check"></i> Fecha de Pedido
+            </label>
+            <input asp-for="OrderDate" class="form-control" type="date" />
+            <span asp-validation-for="OrderDate" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Customer" class="form-label">
+                <i class="bi bi-person"></i> Cliente
+            </label>
+            <input asp-for="Customer" class="form-control" placeholder="Ingrese el nombre del cliente" />
+            <span asp-validation-for="Customer" class="text-danger"></span>
+        </div>
+
+        <hr />
+        <h4>Artículos del Pedido</h4>
+        <div id="lineasContainer">
+            <!-- Aquí se agregarán dinámicamente las líneas -->
+        </div>
+        <div class="mb-3 text-center">
+            <button type="button" class="btn btn-outline-success" id="addLineaBtn">
+                <i class="bi bi-plus text-center"></i> Agregar Artículo
+            </button>
+        </div>
+        <!-- Total se calcula automáticamente -->
+        <div class="mb-3">
+            <label class="form-label">
+                <i class="bi bi-cash-stack"></i> Total
+            </label>
+            <input type="text" id="pedidoTotal" name="Total" class="form-control" readonly value="0" />
+        </div>
+        <div class="d-grid">
+            <button type="submit" class="btn btn-outline-success" id="submitBtn">
+                <i class="bi bi-save"></i> Confirmar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Plantilla oculta para línea de pedido -->
+<div id="lineaTemplate" class="d-none">
+    <div class="card mb-3 lineaPedido">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <!-- Selección del artículo -->
+                <div class="col-md-4">
+                    <label class="form-label">
+                        <i class="bi bi-card-text"></i> Artículo
+                    </label>
+                    <select class="form-select articleSelect" name="Lines[][ArticleId]" required>
+                        <option value="">Seleccione un artículo</option>
+                        @foreach (var articulo in ViewBag.Articulos)
+                        {
+                            <option value="@articulo.Id"
+                            data-minimum="@articulo.MinimumPurchase"
+                            data-sale="@articulo.SalePrice"
+                            data-unit="@articulo.UnitSalePrice"
+                            data-img="@articulo.ImageUrl">
+                                @articulo.Name
+                            </option>
+                        }
+                    </select>
+                    <span class="text-danger field-validation-valid" data-valmsg-for="Lines[][ArticleId]" data-valmsg-replace="true"></span>
+                </div>
+                <!-- Cantidad -->
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-sort-numeric-up"></i> Cantidad
+                    </label>
+                    <input type="number" class="form-control quantityInput" name="Lines[][Quantity]" min="1" value="1" required />
+                    <span class="text-danger field-validation-valid" data-valmsg-for="Lines[][Quantity]" data-valmsg-replace="true"></span>
+                </div>
+                <!-- Precio Unitario (calculado) -->
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-cash"></i> Precio Unitario
+                    </label>
+                    <input type="text" class="form-control unitPriceInput" name="Lines[][UnitPrice]" readonly value="0.00" />
+                </div>
+                <!-- Subtotal (calculado) -->
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-calculator"></i> Subtotal
+                    </label>
+                    <input type="text" class="form-control subtotalInput" readonly value="0.00" />
+                </div>
+                <!-- Botón para eliminar la línea -->
+                <div class="col-md-2 text-center">
+                    <button type="button" class="btn btn-danger removeLineaBtn" title="Eliminar Artículo">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="OrderDate" class="control-label"></label>
-                <input asp-for="OrderDate" class="form-control" />
-                <span asp-validation-for="OrderDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Customer" class="control-label"></label>
-                <input asp-for="Customer" class="form-control" />
-                <span asp-validation-for="Customer" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Total" class="control-label"></label>
-                <input asp-for="Total" class="form-control" />
-                <span asp-validation-for="Total" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+@{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Función para recalcular el precio unitario y subtotal de una línea
+        function recalcLinea(linea) {
+            var articleSelect = linea.querySelector('.articleSelect');
+            var quantityInput = linea.querySelector('.quantityInput');
+            var unitPriceInput = linea.querySelector('.unitPriceInput');
+            var subtotalInput = linea.querySelector('.subtotalInput');
+
+            var selectedOption = articleSelect.options[articleSelect.selectedIndex];
+            if (!selectedOption || selectedOption.value === "") {
+                unitPriceInput.value = "0.00";
+                subtotalInput.value = "0.00";
+                return;
+            }
+            // Obtener datos del artículo
+            var minimum = parseInt(selectedOption.getAttribute("data-minimum"));
+            var salePrice = parseFloat(selectedOption.getAttribute("data-sale"));
+            var unitPrice = parseFloat(selectedOption.getAttribute("data-unit"));
+            var quantity = parseInt(quantityInput.value) || 0;
+
+            // Determinar precio unitario según la cantidad comparada con la compra mínima
+            var calculatedPrice = quantity >= minimum ? salePrice : unitPrice;
+            unitPriceInput.value = calculatedPrice.toFixed(2);
+
+            // Calcular subtotal
+            var subtotal = calculatedPrice * quantity;
+            subtotalInput.value = subtotal.toFixed(2);
+        }
+
+        // Función para recalcular el total del pedido
+        function recalcTotal() {
+            var total = 0;
+            document.querySelectorAll('.subtotalInput').forEach(function(subInput) {
+                total += parseFloat(subInput.value) || 0;
+            });
+            document.getElementById('pedidoTotal').value = total.toFixed(2);
+        }
+
+        // Asignar eventos a una línea: cambios en artículo y cantidad
+        function attachLineaEvents(linea) {
+            var articleSelect = linea.querySelector('.articleSelect');
+            var quantityInput = linea.querySelector('.quantityInput');
+
+            articleSelect.addEventListener('change', function() {
+                recalcLinea(linea);
+                recalcTotal();
+            });
+            quantityInput.addEventListener('input', function() {
+                recalcLinea(linea);
+                recalcTotal();
+            });
+        }
+
+        // Función para agregar una nueva línea
+        function addLinea() {
+            var template = document.getElementById('lineaTemplate').innerHTML;
+            var container = document.getElementById('lineasContainer');
+            var div = document.createElement('div');
+            div.innerHTML = template;
+            container.appendChild(div.firstElementChild);
+
+            var nuevaLinea = container.lastElementChild;
+            attachLineaEvents(nuevaLinea);
+
+            // Inicializar Select2 con imagen y texto
+            var articleSelect = nuevaLinea.querySelector('.articleSelect');
+            $(articleSelect).select2({
+                placeholder: "Seleccione un artículo",
+                allowClear: true,
+                templateResult: formatArticle,
+                templateSelection: formatArticleSelection
+            });
+        }
+
+        // Función para mostrar imagen y texto en las opciones del select
+        function formatArticle(article) {
+            if (!article.id) { return article.text; }
+            var $article = $(`
+                <span>
+                    <img src="${$(article.element).data('img')}" style="width: 40px; height: 40px; margin-right: 10px;" />
+                    ${article.text}
+                    <div class="small text-muted" style="margin-top: 5px;">Mínimo: ${$(article.element).data('minimum')}</div>
+                </span>
+            `);
+            return $article;
+        }
+
+        // Función para mostrar el artículo seleccionado
+        function formatArticleSelection(article) {
+            var $article = $(`
+                <span>
+                    <img src="${$(article.element).data('img')}" style="width: 20px; height: 20px; margin-right: 5px;" />
+                    ${article.text}
+                </span>
+            `);
+            return $article;
+        }
+
+        // Manejar el botón de agregar línea
+        document.getElementById('addLineaBtn').addEventListener('click', function () {
+            addLinea();
+        });
+
+        // Manejar eliminación de línea
+        document.getElementById('lineasContainer').addEventListener('click', function(event) {
+            if (event.target.closest('.removeLineaBtn')) {
+                var linea = event.target.closest('.lineaPedido');
+                linea.remove();
+                recalcTotal();
+            }
+        });
+
+        // Inicializar con una línea por defecto
+        window.addEventListener('load', function () {
+            addLinea();
+        });
+
+        // Validación del formulario utilizando el mecanismo de Bootstrap y SweetAlert para errores
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('form[novalidate]');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+
+                    if (!form.checkValidity()) {
+                        // Mostrar mensaje de error con SweetAlert
+                        Swal.fire({
+                            icon: 'error',
+                            title: '¡Error!',
+                            text: 'Por favor, corrija los errores del formulario.'
+                        });
+                    } else {
+                        form.submit(); // Enviar el formulario si es válido
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
 }

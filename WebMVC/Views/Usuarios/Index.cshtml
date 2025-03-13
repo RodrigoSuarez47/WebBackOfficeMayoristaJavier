@@ -13,7 +13,7 @@
         <a asp-action="Create" class="btn btn-outline-success">
             <i class="bi bi-person-plus-fill"></i> Agregar Usuario
         </a>
-    </div>
+    </div
 
     <div class="table-responsive">
         <table class="table table-striped table-hover shadow-sm animate__animated animate__fadeIn">
@@ -63,7 +63,32 @@
     </form>
 </div>
 
+    @if (ViewBag.Mensaje != null)
+    {
+        <script>
+            var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+            Swal.fire({
+                icon: "@ViewBag.AlertIcon",
+                title: "@ViewBag.AlertTitle",
+                text: mensaje,
+                confirmButtonColor: "#198754"
+            });
+        </script>
+    }
+
 @section Scripts {
+        @if (ViewBag.Mensaje != null)
+    {
+        <script>
+            var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+            Swal.fire({
+                icon: "@ViewBag.AlertIcon",
+                title: "@ViewBag.AlertTitle",
+                text: mensaje,
+                confirmButtonColor: "#198754"
+            });
+        </script>
+    }
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll(".delete-btn").forEach(button => {
@@ -87,7 +112,7 @@
 
                             // Enviar el formulario de eliminación
                             let form = document.getElementById("deleteForm");
-                            form.action = "/Usuarios/Delete"; 
+                            form.action = "/Usuarios/Delete";
                             form.submit();
                         }
                     });

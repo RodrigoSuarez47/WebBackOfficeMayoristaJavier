@@ -9,7 +9,7 @@
 
 <div class="row justify-content-center animate__animated animate__fadeIn">
     <div class="col-md-8 col-lg-6 shadow-lg p-4 rounded bg-light">
-        <h4 class="text-center mb-3"><i class="bi bi-truck"></i> Datos del Artículo</h4>
+        <h4 class="text-center mb-3"><i class="bi bi-box"></i> Datos del Artículo</h4>
         <hr />
         <form asp-action="Edit" method="post" id="editForm">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-4"></div>
@@ -19,7 +19,7 @@
                 <label asp-for="Id" class="form-label fw-bold">
                     <i class="bi bi-hash"></i> ID del Artículo
                 </label>
-                <input asp-for="Id" class="form-control" disabled />
+                <input asp-for="Id" class="form-control" readonly />
             </div>
 
             <!-- Imagen -->
@@ -159,6 +159,20 @@
     </a>
 </div>
 
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+
+        Swal.fire({
+            icon: "@ViewBag.AlertIcon",
+            title: "@ViewBag.AlertTitle",
+            text: mensaje,
+            confirmButtonColor: "#198754"
+        });
+    </script>
+}
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script>
@@ -167,14 +181,14 @@
             var imageUrl = document.querySelector('input[name="ImageUrl"]').value;
             var img = document.querySelector('#imagePreview img');
 
-            if (imageUrl.trim() !== "") {
+            if (imageUrl.trim() !== "" && isValidUrl(imageUrl)) {
                 img.src = imageUrl;
                 img.style.opacity = "0.5";
-                setTimeout(() => img.style.opacity = "1", 300); // Animación de transición
+                setTimeout(() => img.style.opacity = "1", 300);
             }
         }
 
-               document.getElementById("editForm").addEventListener("submit", function (event) {
+        document.getElementById("editForm").addEventListener("submit", function (event) {
             event.preventDefault(); // Esto evita el envío del formulario
 
             let nombre = document.querySelector('input[name="Name"]').value.trim();
@@ -234,9 +248,9 @@
             if (!expirationDate) {
                 warnings.push("No ingresó fecha de vencimiento.");
             }
-             if (!proveedorId) {
-             warnings.push("No seleccionó Proveedor.");
-            }   
+            if (!proveedorId) {
+                warnings.push("No seleccionó Proveedor.");
+            }
 
             // Si hay advertencias, mostrar alerta de confirmación
             if (warnings.length > 0) {
@@ -260,28 +274,10 @@
 
         // Función para enviar el formulario
         function enviarFormulario() {
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: 'Artículo editado exitosamente.',
-                confirmButtonColor: "#198754"
-            }).then(() => {
-                document.getElementById("editForm").submit(); // Aquí se envía el formulario
-            });
+            document.getElementById("editForm").submit();
         }
 
         // Función para verificar si la URL es válida
-        function isValidUrl(string) {
-            try {
-                new URL(string);
-                return true;
-            } catch (_) {
-                return false;
-            }
-        }
-
-
-        // Verificar URL válida
         function isValidUrl(string) {
             try {
                 new URL(string);

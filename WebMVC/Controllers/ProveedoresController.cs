@@ -40,28 +40,44 @@ namespace WebMVC.Controllers
         public async Task<ActionResult> Index()
         {
             List<ProveedorDTO> proveedores;
-            // Intentamos obtener la lista de proveedores de la caché
-            if (!_cache.TryGetValue("Proveedores", out proveedores))
+            try
             {
-                var client = ConfigureClient();
-                var response = await client.GetAsync(_urlApi);
+                // Intentamos obtener la lista de proveedores de la caché
+                if (!_cache.TryGetValue("Proveedores", out proveedores))
+                {
+                    var client = ConfigureClient();
+                    var response = await client.GetAsync(_urlApi);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    proveedores = await response.Content.ReadFromJsonAsync<List<ProveedorDTO>>();
-                    // Almacenamos los proveedores en caché con una expiración de 60 minutos
-                    _cache.Set("Proveedores", proveedores, new MemoryCacheEntryOptions
+                    if (response.IsSuccessStatusCode)
                     {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60)
-                    });
+                        proveedores = await response.Content.ReadFromJsonAsync<List<ProveedorDTO>>();
+                        // Almacenamos los proveedores en caché con una expiración de 60 minutos
+                        _cache.Set("Proveedores", proveedores, new MemoryCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60)
+                        });
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", "Error al obtener los proveedores.");
+                        ViewBag.AlertTitle = "Error";
+                        ViewBag.AlertIcon = "error";
+                        ViewBag.Mensaje = "No se pudieron obtener los proveedores.";
+                        return View(new List<ProveedorDTO>());
+                    }
                 }
-                else
-                {
-                    ModelState.AddModelError("", "Error al obtener los proveedores.");
-                    return View(new List<ProveedorDTO>());
-                }
+
+                return View(proveedores);
             }
-            return View(proveedores);
+            catch (Exception ex)
+            {
+                // Captura de cualquier excepción y mensaje de error
+                ModelState.AddModelError("", $"Error al obtener los proveedores: {ex.Message}");
+                ViewBag.AlertTitle = "Error";
+                ViewBag.AlertIcon = "error";
+                ViewBag.Mensaje = $"Error al obtener los proveedores: {ex.Message}";
+                return View(new List<ProveedorDTO>());
+            }
         }
 
         // GET: Proveedores/Details/5
@@ -70,55 +86,87 @@ namespace WebMVC.Controllers
             var cacheKey = $"Proveedor_{id}";
             ProveedorDTO proveedor = null;
 
-            // Intentamos obtener el proveedor de la caché
-            if (!_cache.TryGetValue(cacheKey, out proveedor))
+            try
             {
-                var client = ConfigureClient();
-                var response = await client.GetAsync($"{_urlApi}/{id}");
-
-                if (response.IsSuccessStatusCode)
+                // Intentamos obtener el proveedor de la caché
+                if (!_cache.TryGetValue(cacheKey, out proveedor))
                 {
-                    proveedor = await response.Content.ReadFromJsonAsync<ProveedorDTO>();
+                    var client = ConfigureClient();
+                    var response = await client.GetAsync($"{_urlApi}/{id}");
 
-                    // Almacenamos el proveedor en caché con una expiración de 10 minutos
-                    _cache.Set(cacheKey, proveedor, new MemoryCacheEntryOptions
+                    if (response.IsSuccessStatusCode)
                     {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-                    });
-                }
-                else
-                {
-                    return NotFound();
-                }
-            }
+                        proveedor = await response.Content.ReadFromJsonAsync<ProveedorDTO>();
 
-            return View(proveedor);
+                        // Almacenamos el proveedor en caché con una expiración de 10 minutos
+                        _cache.Set(cacheKey, proveedor, new MemoryCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                        });
+                    }
+                    else
+                    {
+                        ViewBag.AlertTitle = "Error";
+                        ViewBag.AlertIcon = "error";
+                        ViewBag.Mensaje = "No se pudo obtener el proveedor.";
+                        return NotFound();
+                    }
+                }
+                return View(proveedor);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Error al obtener los detalles del proveedor: {ex.Message}");
+                ViewBag.AlertTitle = "Error";
+                ViewBag.AlertIcon = "error";
+                ViewBag.Mensaje = $"Error al obtener los detalles del proveedor: {ex.Message}";
+                return NotFound();
+            }
         }
 
         // GET: Proveedores/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
+        public ActionResult Create() => View();
 
         // POST: Proveedores/Create
         [HttpPost]
         public async Task<ActionResult> Create(ProveedorDTO proveedor)
         {
+            try
+            {
                 var client = ConfigureClient();
                 var response = await client.PostAsJsonAsync(_urlApi, proveedor);
 
-            if (response.IsSuccessStatusCode)
-            {
-                // Limpiamos la caché ya que los datos han cambiado
-                _cache.Remove("Proveedores");
-                return RedirectToAction(nameof(Index));
+                if (response.IsSuccessStatusCode)
+                {
+                    // Limpiamos la caché ya que los datos han cambiado
+                    _cache.Remove("Proveedores");
+
+                    // Agregar mensaje de éxito a ViewBag
+                    ViewBag.AlertTitle = "Éxito";
+                    ViewBag.AlertIcon = "success";
+                    ViewBag.Mensaje = "Proveedor creado exitosamente.";
+
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Error al crear el proveedor.");
+                    // Agregar mensaje de error a ViewBag
+                    ViewBag.AlertTitle = "Error";
+                    ViewBag.AlertIcon = "error";
+                    ViewBag.Mensaje = "No se pudo crear el proveedor.";
+                    return View(proveedor);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, "Error al crear el proveedor.");
+                ModelState.AddModelError("", $"Error al crear el proveedor: {ex.Message}");
+                // Agregar mensaje de error a ViewBag
+                ViewBag.AlertTitle = "Error";
+                ViewBag.AlertIcon = "error";
+                ViewBag.Mensaje = $"Error al crear el proveedor: {ex.Message}";
+                return View(proveedor);
             }
-            return View(proveedor);
         }
 
         // GET: Proveedores/Edit/5
@@ -141,6 +189,8 @@ namespace WebMVC.Controllers
             {
                 return NotFound();
             }
+            try
+            {
                 var client = ConfigureClient();
                 var response = await client.PutAsJsonAsync($"{_urlApi}/{id}", proveedor);
 
@@ -148,12 +198,33 @@ namespace WebMVC.Controllers
                 {
                     _cache.Remove("Proveedores");
                     _cache.Remove($"Proveedor_{id}");
+
+                    // Agregar mensaje de éxito a ViewBag
+                    ViewBag.AlertTitle = "Éxito";
+                    ViewBag.AlertIcon = "success";
+                    ViewBag.Mensaje = "Proveedor actualizado exitosamente.";
+
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
                     ModelState.AddModelError(string.Empty, "Error al actualizar el proveedor.");
+                    // Agregar mensaje de error a ViewBag
+                    ViewBag.AlertTitle = "Error";
+                    ViewBag.AlertIcon = "error";
+                    ViewBag.Mensaje = "No se pudo actualizar el proveedor.";
+                    return View(proveedor);
                 }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Error al actualizar el proveedor: {ex.Message}");
+                // Agregar mensaje de error a ViewBag
+                ViewBag.AlertTitle = "Error";
+                ViewBag.AlertIcon = "error";
+                ViewBag.Mensaje = $"Error al actualizar el proveedor: {ex.Message}";
+            }
+
             return View(proveedor);
         }
 
@@ -173,19 +244,42 @@ namespace WebMVC.Controllers
         [HttpPost, ActionName("Delete")]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            var client = ConfigureClient();
-            var response = await client.DeleteAsync($"{_urlApi}/{id}");
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                // Limpiamos la caché
-                _cache.Remove("Proveedores");
-                _cache.Remove($"Proveedor_{id}");
-                return RedirectToAction(nameof(Index));
+                var client = ConfigureClient();
+                var response = await client.DeleteAsync($"{_urlApi}/{id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Limpiamos la caché
+                    _cache.Remove("Proveedores");
+                    _cache.Remove($"Proveedor_{id}");
+
+                    // Agregar mensaje de éxito a ViewBag
+                    ViewBag.AlertTitle = "Éxito";
+                    ViewBag.AlertIcon = "success";
+                    ViewBag.Mensaje = "Proveedor eliminado exitosamente.";
+
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Error al eliminar el proveedor.");
+                    // Agregar mensaje de error a ViewBag
+                    ViewBag.AlertTitle = "Error";
+                    ViewBag.AlertIcon = "error";
+                    ViewBag.Mensaje = "No se pudo eliminar el proveedor.";
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Error al eliminar el proveedor: {ex.Message}");
+                // Agregar mensaje de error a ViewBag
+                ViewBag.AlertTitle = "Error";
+                ViewBag.AlertIcon = "error";
+                ViewBag.Mensaje = $"Error al eliminar el proveedor: {ex.Message}";
             }
 
-            // En caso de error, mostramos el mensaje adecuado
-            ModelState.AddModelError("", "Error al eliminar el proveedor.");
             return View("Index");
         }
 
@@ -195,23 +289,32 @@ namespace WebMVC.Controllers
             var cacheKey = $"Proveedor_{id}";
             ProveedorDTO proveedor = null;
 
-            // Intentamos obtener el proveedor de la caché
-            if (!_cache.TryGetValue(cacheKey, out proveedor))
+            try
             {
-                var client = ConfigureClient();
-                var response = await client.GetAsync($"{_urlApi}/{id}");
-
-                if (response.IsSuccessStatusCode)
+                // Intentamos obtener el proveedor de la caché
+                if (!_cache.TryGetValue(cacheKey, out proveedor))
                 {
-                    proveedor = await response.Content.ReadFromJsonAsync<ProveedorDTO>();
+                    var client = ConfigureClient();
+                    var response = await client.GetAsync($"{_urlApi}/{id}");
 
-                    // Almacenamos el proveedor en caché con una expiración de 10 minutos
-                    _cache.Set(cacheKey, proveedor, new MemoryCacheEntryOptions
+                    if (response.IsSuccessStatusCode)
                     {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-                    });
+                        proveedor = await response.Content.ReadFromJsonAsync<ProveedorDTO>();
+
+                        // Almacenamos el proveedor en caché con una expiración de 10 minutos
+                        _cache.Set(cacheKey, proveedor, new MemoryCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                        });
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                // Captura de cualquier excepción
+                ModelState.AddModelError("", $"Error al obtener el proveedor por ID: {ex.Message}");
+            }
+
             return proveedor;
         }
     }

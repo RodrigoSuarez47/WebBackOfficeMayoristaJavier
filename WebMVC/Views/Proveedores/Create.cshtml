@@ -56,6 +56,19 @@
     </a>
 </div>
 
+@if (ViewBag.Mensaje != null)
+{
+    <script>
+        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
+
+        Swal.fire({
+            icon: "@ViewBag.AlertIcon",
+            title: "@ViewBag.AlertTitle",
+            text: mensaje,
+            confirmButtonColor: "#198754"
+        });
+    </script>
+}
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
@@ -115,15 +128,19 @@
                 return;
             }
 
-            // Si todo está correcto, mostrar mensaje de éxito y enviar el formulario
+            // Confirmación antes de guardar cambios
             Swal.fire({
-                icon: "success",
-                title: "¡Proveedor creado!",
-                text: "El proveedor ha sido registrado correctamente.",
-                confirmButtonColor: "#28a745"
+                icon: "warning",
+                title: "¿Agregar Proveedor?",
+                text: "¿Estás seguro de que deseas agregar este proveedor?",
+                showCancelButton: true,
+                confirmButtonText: "Sí, agregar",
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: "#28a745",
+                cancelButtonColor: "#d33"
             }).then((result) => {
                 if (result.isConfirmed) {
-                    event.target.submit(); // Enviar el formulario después de la alerta
+                    event.target.submit(); // Si la acción es confirmada, enviamos el formulario
                 }
             });
         });
