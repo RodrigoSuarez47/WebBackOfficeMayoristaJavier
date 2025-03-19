@@ -1,11 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
-using System.Net.Http.Headers;
-using WebMVC.Models;
-using System.Threading.Tasks;
-using DTOs;
 using WebMVC.Filtros;
 
 namespace WebMVC.Controllers
@@ -24,7 +20,7 @@ namespace WebMVC.Controllers
         {
             _httpClientFactory = httpClientFactory;
             _memoryCache = memoryCache;
-            _urlApi = config.GetValue<string>("UrlAPI") + "Orders/"; 
+            _urlApi = config.GetValue<string>("UrlAPI") + "Orders/";
             _urlApiArticulos = config.GetValue<string>("UrlAPI") + "Article/";
         }
 

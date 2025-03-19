@@ -179,7 +179,7 @@ public class ArticulosController : Controller
         try
         {
             var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
-            ViewBag.Proveedores = await GetProveedores(); 
+            ViewBag.Proveedores = await GetProveedores();
 
             return View(articulos ?? new List<ArticuloDTO>());
         }
@@ -188,7 +188,7 @@ public class ArticulosController : Controller
             ViewBag.AlertIcon = "error";
             ViewBag.AlertTitle = "Error";
             ViewBag.Mensaje = $"Error al cargar los artículos: {ex.Message}";
-            ViewBag.Proveedores = new List<ProveedorDTO>(); 
+            ViewBag.Proveedores = new List<ProveedorDTO>();
             return View(new List<ArticuloDTO>());
         }
     }
@@ -219,15 +219,15 @@ public class ArticulosController : Controller
     }
 
     // GET: ArticulosController/Create
-       public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create()
     {
         ViewBag.Proveedores = await GetProveedores();
         return View(new ArticuloDTO());
     }
 
 
-// POST: ArticulosController/Create
-[HttpPost]
+    // POST: ArticulosController/Create
+    [HttpPost]
     public async Task<ActionResult> Create(ArticuloDTO articulo)
     {
         try
@@ -426,7 +426,7 @@ public class ArticulosController : Controller
             ViewBag.AlertIcon = "error";
             ViewBag.AlertTitle = "Error";
             ViewBag.Mensaje = "Artículo no encontrado.";
-            return RedirectToAction(nameof(List)); 
+            return RedirectToAction(nameof(List));
         }
 
         articulo.IsVisible = !articulo.IsVisible;
@@ -450,7 +450,7 @@ public class ArticulosController : Controller
             ViewBag.AlertTitle = "Error";
             ViewBag.Mensaje = "No se pudo actualizar la visibilidad del artículo.";
 
-            return View("List"); 
+            return View("List");
         }
     }
 
@@ -474,6 +474,6 @@ public class ArticulosController : Controller
             ViewBag.Mensaje = $"Error al filtrar los artículos por proveedor: {ex.Message}";
             ViewBag.Proveedores = new List<ProveedorDTO>();
             return View("List", new List<ArticuloDTO>());
-        }   
+        }
     }
 }

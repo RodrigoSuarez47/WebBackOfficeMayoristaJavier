@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using System;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace WebMVC.Filtros
 {

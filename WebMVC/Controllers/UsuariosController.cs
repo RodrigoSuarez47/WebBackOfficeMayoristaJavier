@@ -1,11 +1,5 @@
 ﻿using DTOs;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
 using WebMVC.Filtros;
 
 namespace WebMVC.Controllers
