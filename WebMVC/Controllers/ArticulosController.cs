@@ -77,6 +77,38 @@ public class ArticulosController : Controller
         return default;
     }
 
+    //Sin uso de Cache
+    private async Task<T> GetApiResponse<T>(string endpoint)
+    {
+        try
+        {
+            var client = ConfigureClient();
+            var respuesta = await client.GetAsync(UrlApi + endpoint).ConfigureAwait(false);
+
+            if (respuesta.IsSuccessStatusCode)
+            {
+                string cuerpo = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var deserializedResponse = JsonConvert.DeserializeObject<T>(cuerpo);
+                return deserializedResponse;
+            }
+            else
+            {
+                string errorResponse = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
+                ViewBag.AlertIcon = "error";
+                ViewBag.AlertTitle = "Error";
+                ViewBag.Mensaje = $"Error: {errorResponse}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ViewBag.AlertIcon = "error";
+            ViewBag.AlertTitle = "Error";
+            ViewBag.Mensaje = $"Error al comunicarse con el servidor: {ex.Message}";
+        }
+
+        return default;
+    }
+
     private async Task<string> PostOrPutApiResponse(string endpoint, HttpMethod method, object data = null)
     {
         try
@@ -430,7 +462,7 @@ public class ArticulosController : Controller
         }
         try
         {
-            var articulos = await GetApiResponse<List<ArticuloDTO>>($"FilterBySupplier/{proveedorId}", CacheKeyFilter, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+            var articulos = await GetApiResponse<List<ArticuloDTO>>($"FilterBySupplier/{proveedorId}").ConfigureAwait(false);
             ViewBag.Proveedores = await GetProveedores();
             ViewBag.ProveedorSeleccionado = proveedorId;
             return View("List", articulos ?? new List<ArticuloDTO>());
