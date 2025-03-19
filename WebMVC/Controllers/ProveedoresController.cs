@@ -34,6 +34,7 @@ namespace WebMVC.Controllers
         }
 
         // GET: Proveedores
+        [UsuarioLogueado]
         public async Task<ActionResult> Index()
         {
             List<ProveedorDTO> proveedores;
@@ -56,10 +57,9 @@ namespace WebMVC.Controllers
                     }
                     else
                     {
-                        ModelState.AddModelError("", "Error al obtener los proveedores.");
-                        ViewBag.AlertTitle = "Error";
-                        ViewBag.AlertIcon = "error";
-                        ViewBag.Mensaje = "No se pudieron obtener los proveedores.";
+                        TempData["AlertTitle"] = "Error";
+                        TempData["AlertIcon"] = "error";
+                        TempData["Mensaje"] = "No se pudieron obtener los proveedores.";
                         return View(new List<ProveedorDTO>());
                     }
                 }
@@ -69,15 +69,15 @@ namespace WebMVC.Controllers
             catch (Exception ex)
             {
                 // Captura de cualquier excepción y mensaje de error
-                ModelState.AddModelError("", $"Error al obtener los proveedores: {ex.Message}");
-                ViewBag.AlertTitle = "Error";
-                ViewBag.AlertIcon = "error";
-                ViewBag.Mensaje = $"Error al obtener los proveedores: {ex.Message}";
+                TempData["AlertTitle"] = "Error";
+                TempData["AlertIcon"] = "error";
+                TempData["Mensaje"] = $"Error al obtener los proveedores: {ex.Message}";
                 return View(new List<ProveedorDTO>());
             }
         }
 
         // GET: Proveedores/Details/5
+        [UsuarioLogueado]
         public async Task<ActionResult> Details(int id)
         {
             var cacheKey = $"Proveedor_{id}";
@@ -103,9 +103,9 @@ namespace WebMVC.Controllers
                     }
                     else
                     {
-                        ViewBag.AlertTitle = "Error";
-                        ViewBag.AlertIcon = "error";
-                        ViewBag.Mensaje = "No se pudo obtener el proveedor.";
+                        TempData["AlertTitle"] = "Error";
+                        TempData["AlertIcon"] = "error";
+                        TempData["Mensaje"] = "No se pudo obtener el proveedor.";
                         return NotFound();
                     }
                 }
@@ -113,17 +113,18 @@ namespace WebMVC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error al obtener los detalles del proveedor: {ex.Message}");
-                ViewBag.AlertTitle = "Error";
-                ViewBag.AlertIcon = "error";
-                ViewBag.Mensaje = $"Error al obtener los detalles del proveedor: {ex.Message}";
+                TempData["AlertTitle"] = "Error";
+                TempData["AlertIcon"] = "error";
+                TempData["Mensaje"] = $"Error al obtener los detalles del proveedor: {ex.Message}";
                 return NotFound();
             }
         }
 
         // GET: Proveedores/Create
+        [UsuarioLogueado]
         public ActionResult Create() => View();
 
+        [UsuarioLogueado]
         // POST: Proveedores/Create
         [HttpPost]
         public async Task<ActionResult> Create(ProveedorDTO proveedor)
@@ -138,35 +139,32 @@ namespace WebMVC.Controllers
                     // Limpiamos la caché ya que los datos han cambiado
                     _cache.Remove("Proveedores");
 
-                    // Agregar mensaje de éxito a ViewBag
-                    ViewBag.AlertTitle = "Éxito";
-                    ViewBag.AlertIcon = "success";
-                    ViewBag.Mensaje = "Proveedor creado exitosamente.";
+                    // Agregar mensaje de éxito a TempData
+                    TempData["AlertTitle"] = "Éxito";
+                    TempData["AlertIcon"] = "success";
+                    TempData["Mensaje"] = "Proveedor creado exitosamente.";
 
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Error al crear el proveedor.");
-                    // Agregar mensaje de error a ViewBag
-                    ViewBag.AlertTitle = "Error";
-                    ViewBag.AlertIcon = "error";
-                    ViewBag.Mensaje = "No se pudo crear el proveedor.";
+                    TempData["AlertTitle"] = "Error";
+                    TempData["AlertIcon"] = "error";
+                    TempData["Mensaje"] = "No se pudo crear el proveedor.";
                     return View(proveedor);
                 }
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error al crear el proveedor: {ex.Message}");
-                // Agregar mensaje de error a ViewBag
-                ViewBag.AlertTitle = "Error";
-                ViewBag.AlertIcon = "error";
-                ViewBag.Mensaje = $"Error al crear el proveedor: {ex.Message}";
+                TempData["AlertTitle"] = "Error";
+                TempData["AlertIcon"] = "error";
+                TempData["Mensaje"] = $"Error al crear el proveedor: {ex.Message}";
                 return View(proveedor);
             }
         }
 
         // GET: Proveedores/Edit/5
+        [UsuarioLogueado]
         public async Task<ActionResult> Edit(int id)
         {
             var proveedor = await ObtenerProveedorPorId(id);
@@ -179,6 +177,7 @@ namespace WebMVC.Controllers
         }
 
         // POST: Proveedores/Edit/5
+        [UsuarioLogueado]
         [HttpPost]
         public async Task<ActionResult> Edit(int id, ProveedorDTO proveedor)
         {
@@ -196,36 +195,33 @@ namespace WebMVC.Controllers
                     _cache.Remove("Proveedores");
                     _cache.Remove($"Proveedor_{id}");
 
-                    // Agregar mensaje de éxito a ViewBag
-                    ViewBag.AlertTitle = "Éxito";
-                    ViewBag.AlertIcon = "success";
-                    ViewBag.Mensaje = "Proveedor actualizado exitosamente.";
+                    // Agregar mensaje de éxito a TempData
+                    TempData["AlertTitle"] = "Éxito";
+                    TempData["AlertIcon"] = "success";
+                    TempData["Mensaje"] = "Proveedor actualizado exitosamente.";
 
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Error al actualizar el proveedor.");
-                    // Agregar mensaje de error a ViewBag
-                    ViewBag.AlertTitle = "Error";
-                    ViewBag.AlertIcon = "error";
-                    ViewBag.Mensaje = "No se pudo actualizar el proveedor.";
+                    TempData["AlertTitle"] = "Error";
+                    TempData["AlertIcon"] = "error";
+                    TempData["Mensaje"] = "No se pudo actualizar el proveedor.";
                     return View(proveedor);
                 }
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error al actualizar el proveedor: {ex.Message}");
-                // Agregar mensaje de error a ViewBag
-                ViewBag.AlertTitle = "Error";
-                ViewBag.AlertIcon = "error";
-                ViewBag.Mensaje = $"Error al actualizar el proveedor: {ex.Message}";
+                TempData["AlertTitle"] = "Error";
+                TempData["AlertIcon"] = "error";
+                TempData["Mensaje"] = $"Error al actualizar el proveedor: {ex.Message}";
             }
 
             return View(proveedor);
         }
 
         // GET: Proveedores/Delete/5
+        [UsuarioLogueado]
         public async Task<ActionResult> Delete(int id)
         {
             var proveedor = await ObtenerProveedorPorId(id);
@@ -239,6 +235,7 @@ namespace WebMVC.Controllers
 
         // POST: Proveedores/Delete/5
         [HttpPost, ActionName("Delete")]
+        [UsuarioLogueado]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
             try
@@ -252,35 +249,32 @@ namespace WebMVC.Controllers
                     _cache.Remove("Proveedores");
                     _cache.Remove($"Proveedor_{id}");
 
-                    // Agregar mensaje de éxito a ViewBag
-                    ViewBag.AlertTitle = "Éxito";
-                    ViewBag.AlertIcon = "success";
-                    ViewBag.Mensaje = "Proveedor eliminado exitosamente.";
+                    // Agregar mensaje de éxito a TempData
+                    TempData["AlertTitle"] = "Éxito";
+                    TempData["AlertIcon"] = "success";
+                    TempData["Mensaje"] = "Proveedor eliminado exitosamente.";
 
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Error al eliminar el proveedor.");
-                    // Agregar mensaje de error a ViewBag
-                    ViewBag.AlertTitle = "Error";
-                    ViewBag.AlertIcon = "error";
-                    ViewBag.Mensaje = "No se pudo eliminar el proveedor.";
+                    TempData["AlertTitle"] = "Error";
+                    TempData["AlertIcon"] = "error";
+                    TempData["Mensaje"] = "No se pudo eliminar el proveedor.";
                 }
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error al eliminar el proveedor: {ex.Message}");
-                // Agregar mensaje de error a ViewBag
-                ViewBag.AlertTitle = "Error";
-                ViewBag.AlertIcon = "error";
-                ViewBag.Mensaje = $"Error al eliminar el proveedor: {ex.Message}";
+                TempData["AlertTitle"] = "Error";
+                TempData["AlertIcon"] = "error";
+                TempData["Mensaje"] = $"Error al eliminar el proveedor: {ex.Message}";
             }
 
             return View("Index");
         }
 
         // Método auxiliar para obtener un proveedor por ID, usando la caché
+        [UsuarioLogueado]
         private async Task<ProveedorDTO> ObtenerProveedorPorId(int id)
         {
             var cacheKey = $"Proveedor_{id}";
@@ -308,8 +302,9 @@ namespace WebMVC.Controllers
             }
             catch (Exception ex)
             {
-                // Captura de cualquier excepción
-                ModelState.AddModelError("", $"Error al obtener el proveedor por ID: {ex.Message}");
+                TempData["AlertTitle"] = "Error";
+                TempData["AlertIcon"] = "error";
+                TempData["Mensaje"] = $"Error al obtener el proveedor por ID: {ex.Message}";
             }
 
             return proveedor;

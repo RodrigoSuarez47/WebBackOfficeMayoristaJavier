@@ -112,6 +112,19 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+
+    @if (TempData["AlertIcon"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: '@TempData["AlertIcon"]',
+                title: '@TempData["AlertTitle"]',
+                html: '@Html.Raw(TempData["Mensaje"].ToString())', // Usamos Raw para evitar que se escape el HTML
+                showConfirmButton: true
+            });
+        </script>
+    }
+
     <script>
         // Inicializar tooltips de Bootstrap
         document.addEventListener("DOMContentLoaded", function () {

@@ -37,6 +37,7 @@ namespace WebMVC.Controllers
             return client;
         }
 
+        [UsuarioLogueado]
         private async Task<List<ArticuloDTO>> GetArticulos()
         {
             if (_memoryCache.TryGetValue(_cacheKeyArticulos, out List<ArticuloDTO> cachedArticulos))
@@ -75,6 +76,7 @@ namespace WebMVC.Controllers
         }
 
         // GET: PedidosController
+        [UsuarioLogueado]
         public async Task<ActionResult> Index()
         {
             try
@@ -101,6 +103,7 @@ namespace WebMVC.Controllers
         }
 
         // Método para obtener los pedidos desde la API
+        [UsuarioLogueado]
         private async Task<IEnumerable<PedidoDTO>> GetPedidosFromApi()
         {
             try
@@ -129,6 +132,7 @@ namespace WebMVC.Controllers
         }
 
         // GET: PedidosController/Details/5
+        [UsuarioLogueado]
         public async Task<ActionResult> Details(int id)
         {
             try
@@ -151,6 +155,7 @@ namespace WebMVC.Controllers
         }
 
         // Método para obtener un solo pedido desde la API
+        [UsuarioLogueado]
         private async Task<PedidoDTO> GetPedidoFromApi(int id)
         {
             try
@@ -178,6 +183,7 @@ namespace WebMVC.Controllers
         }
 
         // GET: PedidosController/Create
+        [UsuarioLogueado]
         public async Task<IActionResult> Create()
         {
             List<ArticuloDTO> articulos = await GetArticulos();
@@ -187,6 +193,7 @@ namespace WebMVC.Controllers
 
         // POST: PedidosController/Create
         [HttpPost]
+        [UsuarioLogueado]
         public async Task<ActionResult> Create(PedidoDTO pedido)
         {
             List<ArticuloDTO> articulos = await GetArticulos();
@@ -233,6 +240,7 @@ namespace WebMVC.Controllers
 
 
         // GET: PedidosController/Edit/5
+        [UsuarioLogueado]
         public async Task<ActionResult> Edit(int id)
         {
             try
@@ -253,6 +261,7 @@ namespace WebMVC.Controllers
         }
 
         // POST: PedidosController/Edit/5
+        [UsuarioLogueado]
         [HttpPost]
         public async Task<ActionResult> Edit(int id, PedidoDTO pedido)
         {
@@ -287,6 +296,7 @@ namespace WebMVC.Controllers
         }
 
         // GET: PedidosController/Delete/5
+        [UsuarioLogueado]
         public async Task<ActionResult> Delete(int id)
         {
             try
@@ -307,6 +317,7 @@ namespace WebMVC.Controllers
         }
 
         // POST: PedidosController/Delete/5
+        [UsuarioLogueado]
         [HttpPost, ActionName("Delete")]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {

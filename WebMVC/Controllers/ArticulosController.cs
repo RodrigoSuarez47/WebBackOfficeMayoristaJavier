@@ -14,9 +14,7 @@ public class ArticulosController : Controller
     private readonly IMemoryCache _memoryCache;
     private readonly string UrlApi;
     private readonly string CacheKey = "ListaArticulos";
-    private readonly string CacheKeyFilter = "ListaArticulosFiltrados";
     private readonly string UrlApiProveedores;
-    private readonly string CacheKeyProveedores = "ListaProveedores";
 
     public ArticulosController(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache, IConfiguration config)
     {
@@ -62,48 +60,12 @@ public class ArticulosController : Controller
             else
             {
                 string errorResponse = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
-                ViewBag.AlertIcon = "error";
-                ViewBag.AlertTitle = "Error";
-                ViewBag.Mensaje = $"Error: {errorResponse}";
+                SetAlert("error", "Error", $"Error: {errorResponse}");
             }
         }
         catch (Exception ex)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al comunicarse con el servidor: {ex.Message}";
-        }
-
-        return default;
-    }
-
-    //Sin uso de Cache
-    private async Task<T> GetApiResponse<T>(string endpoint)
-    {
-        try
-        {
-            var client = ConfigureClient();
-            var respuesta = await client.GetAsync(UrlApi + endpoint).ConfigureAwait(false);
-
-            if (respuesta.IsSuccessStatusCode)
-            {
-                string cuerpo = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
-                var deserializedResponse = JsonConvert.DeserializeObject<T>(cuerpo);
-                return deserializedResponse;
-            }
-            else
-            {
-                string errorResponse = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
-                ViewBag.AlertIcon = "error";
-                ViewBag.AlertTitle = "Error";
-                ViewBag.Mensaje = $"Error: {errorResponse}";
-            }
-        }
-        catch (Exception ex)
-        {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al comunicarse con el servidor: {ex.Message}";
+            SetAlert("error", "Error", $"Error al comunicarse con el servidor: {ex.Message}");
         }
 
         return default;
@@ -137,11 +99,6 @@ public class ArticulosController : Controller
 
     private async Task<List<ProveedorDTO>> GetProveedores()
     {
-        if (_memoryCache.TryGetValue(CacheKeyProveedores, out List<ProveedorDTO> cachedProveedores))
-        {
-            return cachedProveedores;
-        }
-
         try
         {
             var client = ConfigureClient();
@@ -151,27 +108,28 @@ public class ArticulosController : Controller
             {
                 string cuerpo = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var proveedores = JsonConvert.DeserializeObject<List<ProveedorDTO>>(cuerpo);
-                _memoryCache.Set(CacheKeyProveedores, proveedores, TimeSpan.FromMinutes(30));
                 return proveedores ?? new List<ProveedorDTO>();
             }
             else
             {
                 string errorResponse = await respuesta.Content.ReadAsStringAsync().ConfigureAwait(false);
-                ViewBag.AlertIcon = "error";
-                ViewBag.AlertTitle = "Error";
-                ViewBag.Mensaje = $"Error al cargar los proveedores: {errorResponse}";
+                SetAlert("error", "Error", $"Error al cargar los proveedores: {errorResponse}");
             }
         }
         catch (Exception)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = "Ocurrió un error al cargar los proveedores.";
+            SetAlert("error", "Error", "Ocurrió un error al cargar los proveedores.");
         }
 
         return new List<ProveedorDTO>();
     }
 
+    private void SetAlert(string icon, string title, string message)
+    {
+        TempData["AlertIcon"] = icon;
+        TempData["AlertTitle"] = title;
+        TempData["Mensaje"] = message;
+    }
 
     // GET: ArticulosController
     public async Task<ActionResult> List()
@@ -180,23 +138,20 @@ public class ArticulosController : Controller
         {
             var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
             ViewBag.Proveedores = await GetProveedores();
-
             return View(articulos ?? new List<ArticuloDTO>());
         }
         catch (Exception ex)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al cargar los artículos: {ex.Message}";
+            SetAlert("error", "Error", $"Error al cargar los artículos: {ex.Message}");
             ViewBag.Proveedores = new List<ProveedorDTO>();
             return View(new List<ArticuloDTO>());
         }
     }
 
-
     // GET: ArticulosController/Details/5
     public async Task<ActionResult> Details(int id)
     {
+        ViewBag.Proveedores = await GetProveedores();
         try
         {
             var articulo = await GetApiResponse<ArticuloDTO>($"{id}", $"Articulo_{id}", TimeSpan.FromMinutes(30)).ConfigureAwait(false);
@@ -204,16 +159,12 @@ public class ArticulosController : Controller
             {
                 return View(articulo);
             }
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = "No se pudo obtener el detalle del artículo.";
+            SetAlert("error", "Error", "No se pudo obtener el detalle del artículo.");
             return View();
         }
         catch (Exception ex)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al obtener el detalle del artículo: {ex.Message}";
+            SetAlert("error", "Error", $"Error al obtener el detalle del artículo: {ex.Message}");
             return View();
         }
     }
@@ -225,29 +176,27 @@ public class ArticulosController : Controller
         return View(new ArticuloDTO());
     }
 
-
     // POST: ArticulosController/Create
     [HttpPost]
     public async Task<ActionResult> Create(ArticuloDTO articulo)
     {
+        ViewBag.Proveedores = await GetProveedores();
         try
         {
             var errorMessage = await PostOrPutApiResponse("", HttpMethod.Post, articulo).ConfigureAwait(false);
             if (string.IsNullOrEmpty(errorMessage))
             {
-                _memoryCache.Remove(CacheKey); // Invalida el caché de la lista de artículos
-                return RedirectToAction(nameof(List));
+                SetAlert("success", "Éxito", "El artículo ha sido agregado correctamente.");
+                _memoryCache.Remove(CacheKey);
+                var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+                return View("List", articulosActualizados);
             }
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al crear el artículo: {errorMessage}";
+            SetAlert("error", "Error", $"Error al crear el artículo: {errorMessage}");
             return View(articulo);
         }
         catch (Exception ex)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al crear el artículo: {ex.Message}";
+            SetAlert("error", "Error", $"Error al crear el artículo: {ex.Message}");
             return View(articulo);
         }
     }
@@ -255,36 +204,32 @@ public class ArticulosController : Controller
     // GET: ArticulosController/Edit/5
     public async Task<ActionResult> Edit(int id)
     {
+        var articulos = await GetApiResponse<Collection<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(30)).ConfigureAwait(false);
+        ViewBag.Proveedores = await GetProveedores();
         try
         {
-            var articulos = await GetApiResponse<Collection<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(30)).ConfigureAwait(false);
             var articulo = articulos?.FirstOrDefault(a => a.Id == id);
 
             if (articulo != null)
             {
-                ViewBag.Proveedores = await GetProveedores();
                 return View(articulo);
             }
 
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = "No se pudo obtener el artículo para editar.";
-            return RedirectToAction(nameof(List));
+            SetAlert("error", "Error", "No se pudo obtener el artículo para editar.");
+            return View("List", articulos);
         }
         catch (Exception ex)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al cargar el artículo para editar: {ex.Message}";
-            return RedirectToAction(nameof(List));
+            SetAlert("error", "Error", $"Error al cargar el artículo para editar: {ex.Message}");
+            return View("List", articulos);
         }
     }
-
 
     // POST: ArticulosController/Edit/5
     [HttpPost]
     public async Task<ActionResult> Edit(int id, ArticuloDTO articulo)
     {
+        ViewBag.Proveedores = await GetProveedores();
         try
         {
             var errorMessage = await PostOrPutApiResponse($"{id}", HttpMethod.Put, articulo).ConfigureAwait(false);
@@ -292,18 +237,16 @@ public class ArticulosController : Controller
             {
                 _memoryCache.Remove(CacheKey);
                 _memoryCache.Remove($"Articulo_{id}");
-                return RedirectToAction(nameof(List));
+                SetAlert("success", "Éxito", "El artículo ha sido actualizado correctamente.");
+                var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+                return View("List", articulosActualizados);
             }
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al actualizar el artículo: {errorMessage}";
+            SetAlert("error", "Error", $"Error al actualizar el artículo: {errorMessage}");
             return View(articulo);
         }
         catch (Exception ex)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al actualizar el artículo: {ex.Message}";
+            SetAlert("error", "Error", $"Error al actualizar el artículo: {ex.Message}");
             return View(articulo);
         }
     }
@@ -312,6 +255,8 @@ public class ArticulosController : Controller
     [HttpPost]
     public async Task<ActionResult> Delete(int id)
     {
+        var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+        ViewBag.Proveedores = await GetProveedores();
         try
         {
             var response = await PostOrPutApiResponse($"{id}", HttpMethod.Delete).ConfigureAwait(false);
@@ -320,28 +265,28 @@ public class ArticulosController : Controller
             {
                 _memoryCache.Remove(CacheKey);
                 _memoryCache.Remove($"Articulo_{id}");
-                return RedirectToAction(nameof(List));
+                SetAlert("success", "Éxito", "El artículo ha sido eliminado.");
+                var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+                return View("List", articulosActualizados);
             }
             else
             {
-                ViewBag.AlertIcon = "error";
-                ViewBag.AlertTitle = "Error";
-                ViewBag.Mensaje = $"Error al eliminar el artículo: {response}";
-                return View();
+                SetAlert("error", "Error", $"Error al eliminar el artículo: {response}");
+                return View("List", articulos);
             }
         }
         catch (Exception ex)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al intentar eliminar el artículo: {ex.Message}";
-            return View();
+            SetAlert("error", "Error", $"Error al eliminar el artículo: {ex.Message}");
+            return View("List", articulos);
         }
     }
 
     [HttpPost]
     public async Task<IActionResult> ModificarStock(int articleId, int newStock)
     {
+        var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+        ViewBag.Proveedores = await GetProveedores();
         try
         {
             var errorMessage = await PostOrPutApiResponse($"UpdateStock/{articleId}", HttpMethod.Put, newStock).ConfigureAwait(false);
@@ -350,38 +295,42 @@ public class ArticulosController : Controller
             {
                 _memoryCache.Remove(CacheKey);
                 _memoryCache.Remove($"Articulo_{articleId}");
-                ViewBag.AlertIcon = "success";
-                ViewBag.AlertTitle = "Éxito";
-                ViewBag.Mensaje = "El stock del artículo ha sido actualizado correctamente.";
-                return RedirectToAction(nameof(List));
+
+                TempData["AlertIcon"] = "success";
+                TempData["AlertTitle"] = "Éxito";
+                TempData["Mensaje"] = "El stock del artículo ha sido actualizado correctamente.";
+                var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+                return View("List", articulosActualizados);
             }
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al actualizar el stock: {errorMessage}";
-            return View("List");
+
+            TempData["AlertIcon"] = "error";
+            TempData["AlertTitle"] = "Error";
+            TempData["Mensaje"] = $"Error al actualizar el stock: {errorMessage}";
+            return View("List", articulos);
         }
         catch (Exception ex)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al intentar actualizar el stock: {ex.Message}";
-            return View("List");
+            TempData["AlertIcon"] = "error";
+            TempData["AlertTitle"] = "Error";
+            TempData["Mensaje"] = $"Error al intentar actualizar el stock: {ex.Message}";
+            return View("List", articulos);
         }
     }
-
 
     [HttpPost]
     public async Task<IActionResult> ModificarPrecios(int articleId, decimal purchasePrice, decimal salePrice, decimal unitSalePrice)
     {
+        var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+        ViewBag.Proveedores = await GetProveedores();
         try
         {
             var articulo = await GetApiResponse<ArticuloDTO>($"{articleId}", $"{articleId}").ConfigureAwait(false);
             if (articulo == null)
             {
-                ViewBag.AlertIcon = "error";
-                ViewBag.AlertTitle = "Error";
-                ViewBag.Mensaje = "Artículo no encontrado.";
-                return RedirectToAction(nameof(List));
+                TempData["AlertIcon"] = "error";
+                TempData["AlertTitle"] = "Error";
+                TempData["Mensaje"] = "Artículo no encontrado.";
+                return View("List", articulos);
             }
 
             articulo.PurchasePrice = purchasePrice;
@@ -395,38 +344,40 @@ public class ArticulosController : Controller
                 _memoryCache.Remove(CacheKey);
                 _memoryCache.Remove($"Articulo_{articleId}");
 
-                ViewBag.AlertIcon = "success";
-                ViewBag.AlertTitle = "Éxito";
-                ViewBag.Mensaje = "Los precios del artículo han sido actualizados correctamente.";
-                return RedirectToAction(nameof(List));
+                TempData["AlertIcon"] = "success";
+                TempData["AlertTitle"] = "Éxito";
+                TempData["Mensaje"] = "Los precios del artículo han sido actualizados correctamente.";
+                var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+                return View("List", articulosActualizados);
             }
 
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al actualizar los precios: {errorMessage}";
-            return RedirectToAction(nameof(List));
+            TempData["AlertIcon"] = "error";
+            TempData["AlertTitle"] = "Error";
+            TempData["Mensaje"] = $"Error al actualizar los precios: {errorMessage}";
+            return View("List", articulos);
         }
         catch (Exception ex)
         {
-            // Manejo de excepciones
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al intentar actualizar los precios: {ex.Message}";
-            return RedirectToAction(nameof(List));
+            TempData["AlertIcon"] = "error";
+            TempData["AlertTitle"] = "Error";
+            TempData["Mensaje"] = $"Error al intentar actualizar los precios: {ex.Message}";
+            return View("List", articulos);
         }
     }
+
     [HttpPost]
     public async Task<IActionResult> CambiarVisibilidad(int id)
     {
+        var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
         // Obtener el artículo por id
         var articulo = await GetApiResponse<ArticuloDTO>($"{id}", $"{id}").ConfigureAwait(false);
-
+        ViewBag.Proveedores = await GetProveedores();
         if (articulo == null)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = "Artículo no encontrado.";
-            return RedirectToAction(nameof(List));
+            TempData["AlertIcon"] = "error";
+            TempData["AlertTitle"] = "Error";
+            TempData["Mensaje"] = "Artículo no encontrado.";
+            return View("List", articulos);
         }
 
         articulo.IsVisible = !articulo.IsVisible;
@@ -438,41 +389,41 @@ public class ArticulosController : Controller
             _memoryCache.Remove(CacheKey);
             _memoryCache.Remove($"Articulo_{id}");
 
-            ViewBag.AlertIcon = "success";
-            ViewBag.AlertTitle = "Éxito";
-            ViewBag.Mensaje = articulo.IsVisible ? "Artículo ahora visible." : "Artículo ahora no visible.";
-
-            return RedirectToAction(nameof(List));
+            TempData["AlertIcon"] = "success";
+            TempData["AlertTitle"] = "Éxito";
+            TempData["Mensaje"] = articulo.IsVisible ? "Artículo ahora visible." : "Artículo ahora NO visible.";
+            var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+            return View("List", articulosActualizados);
         }
         else
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = "No se pudo actualizar la visibilidad del artículo.";
+            TempData["AlertIcon"] = "error";
+            TempData["AlertTitle"] = "Error";
+            TempData["Mensaje"] = "No se pudo actualizar la visibilidad del artículo.";
 
-            return View("List");
+            return View("List", articulos);
         }
     }
 
     public async Task<IActionResult> FiltrarArticulosPorProveedor(int proveedorId)
     {
+        var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+        ViewBag.Proveedores = await GetProveedores();
         if (proveedorId == 0)
         {
             return RedirectToAction("List");
         }
         try
         {
-            var articulos = await GetApiResponse<List<ArticuloDTO>>($"FilterBySupplier/{proveedorId}").ConfigureAwait(false);
-            ViewBag.Proveedores = await GetProveedores();
+            var articuloFiltradoss = await GetApiResponse<List<ArticuloDTO>>($"FilterBySupplier/{proveedorId}").ConfigureAwait(false);
             ViewBag.ProveedorSeleccionado = proveedorId;
-            return View("List", articulos ?? new List<ArticuloDTO>());
+            return View("List", articuloFiltradoss ?? new List<ArticuloDTO>());
         }
         catch (Exception ex)
         {
-            ViewBag.AlertIcon = "error";
-            ViewBag.AlertTitle = "Error";
-            ViewBag.Mensaje = $"Error al filtrar los artículos por proveedor: {ex.Message}";
-            ViewBag.Proveedores = new List<ProveedorDTO>();
+            TempData["AlertIcon"] = "error";
+            TempData["AlertTitle"] = "Error";
+            TempData["Mensaje"] = $"Error al filtrar los artículos por proveedor: {ex.Message}";
             return View("List", new List<ArticuloDTO>());
         }
     }

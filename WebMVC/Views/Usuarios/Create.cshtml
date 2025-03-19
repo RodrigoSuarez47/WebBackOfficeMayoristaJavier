@@ -54,19 +54,6 @@
         <i class="bi bi-arrow-left"></i> Volver
     </a>
 </div>
-
-@if (ViewBag.Mensaje != null)
-{
-    <script>
-        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
-
-        Swal.fire({
-            icon: "@ViewBag.AlertIcon",
-            title: "@ViewBag.AlertTitle",
-            text: mensaje,
-            confirmButtonColor: "#198754"
-        });
-    </script>
 }
 
 @section Scripts {

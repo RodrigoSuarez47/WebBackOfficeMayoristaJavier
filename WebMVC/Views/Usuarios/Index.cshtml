@@ -63,32 +63,8 @@
     </form>
 </div>
 
-    @if (ViewBag.Mensaje != null)
-    {
-        <script>
-            var mensaje = "@Html.Raw(ViewBag.Mensaje)";
-            Swal.fire({
-                icon: "@ViewBag.AlertIcon",
-                title: "@ViewBag.AlertTitle",
-                text: mensaje,
-                confirmButtonColor: "#198754"
-            });
-        </script>
-    }
-
 @section Scripts {
-        @if (ViewBag.Mensaje != null)
-    {
-        <script>
-            var mensaje = "@Html.Raw(ViewBag.Mensaje)";
-            Swal.fire({
-                icon: "@ViewBag.AlertIcon",
-                title: "@ViewBag.AlertTitle",
-                text: mensaje,
-                confirmButtonColor: "#198754"
-            });
-        </script>
-    }
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll(".delete-btn").forEach(button => {
@@ -107,10 +83,8 @@
                         cancelButtonText: "Cancelar"
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Asignar el ID del usuario al campo oculto del formulario
                             document.getElementById("deleteUserId").value = userId;
 
-                            // Enviar el formulario de eliminación
                             let form = document.getElementById("deleteForm");
                             form.action = "/Usuarios/Delete";
                             form.submit();

@@ -56,26 +56,11 @@
     </a>
 </div>
 
-@if (ViewBag.Mensaje != null)
-{
-    <script>
-        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
-
-        Swal.fire({
-            icon: "@ViewBag.AlertIcon",
-            title: "@ViewBag.AlertTitle",
-            text: mensaje,
-            confirmButtonColor: "#198754"
-        });
-    </script>
 }
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
-    <!-- SweetAlert2 CDN -->
-    <script async src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
     document.getElementById("proveedorForm").addEventListener("submit", function (event) {

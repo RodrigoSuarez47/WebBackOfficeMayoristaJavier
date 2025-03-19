@@ -146,18 +146,6 @@
     </div>
 </div>
 
-@if (ViewBag.Mensaje != null)
-{
-    <script>
-        var mensaje = "@Html.Raw(ViewBag.Mensaje)";
-        Swal.fire({
-            icon: "@ViewBag.AlertIcon",
-            title: "@ViewBag.AlertTitle",
-            text: mensaje,
-            confirmButtonColor: "#198754"
-        });
-    </script>
-}
 
 <!-- Modal de Modificar Stock sin backdrop -->
 <div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true" data-bs-backdrop="false">
