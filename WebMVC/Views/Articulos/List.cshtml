@@ -3,14 +3,12 @@
 @{
     ViewData["Title"] = "Artículos";
 }
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/css/bootstrap-select.min.css" integrity="sha512-m2XU7+Liqx7SykF0osDJzvPJzq2G5afqWTLWYWc9H9SkSlgYuY4koYhCb5p1Ok6I1YTrTWQKpNUEYbqlKgbkrA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<h1 class="text-center my-4 animate__animated animate__fadeInDown">
+<h1 class="text-center my-4">
     <i class="bi bi-box-seam"></i> Listado de Artículos
 </h1>
 
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 animate__animated animate__fadeInUp">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div class="input-group shadow-sm" style="max-width: 400px;">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
             <input type="text" id="searchString" class="form-control" placeholder="Buscar artículo...">
@@ -18,11 +16,17 @@
         <div class="input-group shadow-sm" style="max-width: 300px;">
             <span class="input-group-text"><i class="bi bi-truck"></i></span>
             <!-- Se agregó data-live-search y la clase selectpicker -->
-            <select id="filterProvider" class="form-select selectpicker" data-live-search="true">
+            <select id="filterProvider" class="form-select" data-live-search="true">
                 <option value="">Todos los proveedores</option>
                 @foreach (var proveedor in ViewBag.Proveedores)
                 {
-                    <option value="@proveedor.Id">@proveedor.Name</option>
+                    @if(ViewBag.ProveedorSeleccionado == proveedor.Id)
+                    {
+                        <option selected value="@proveedor.Id">@proveedor.Name - @proveedor.CompanyName</option>
+                    } else
+                    {
+                        <option value="@proveedor.Id">@proveedor.Name - @proveedor.CompanyName</option>
+                    }
                 }
             </select>
         </div>
@@ -79,10 +83,10 @@
             <tbody id="articlesBody">
                 @foreach (var item in Model)
                 {
-                    <tr data-provider="@item.SupplierId" class="align-middle animate__animated animate__fadeIn">
+                    <tr data-provider="@item.SupplierId" class="align-middle">
                         <td class="text-center" data-sort="@item.Id">@Html.DisplayFor(modelItem => item.Id)</td>
                         <td class="text-center">
-                            <img src="@item.ImageUrl" alt="Imagen de @item.Name" class="img-thumbnail rounded-3 shadow-sm" style="max-width: 60px; max-height: 60px;" />
+                            <img src="@item.ImageUrl" alt="Imagen de @item.Name" class="img-thumbnail rounded-3 shadow-sm" style="max-width: 60px; max-height: 60px;" loading="lazy" />
                         </td>
                         <td class="text-center" data-sort="@item.Name">@Html.DisplayFor(modelItem => item.Name)</td>
                         <td class="text-center" data-sort="@item.Description">@Html.DisplayFor(modelItem => item.Description)</td>
@@ -208,22 +212,22 @@
                         <label for="purchasePrice" class="form-label">
                             <i class="bi bi-cash"></i> Precio de Compra
                         </label>
-                        <input type="number" class="form-control" id="purchasePrice" name="purchasePrice" required min="0" step="0.01" placeholder="Ingrese precio de compra" />
+                        <input type="number" class="form-control" id="purchasePrice" name="purchasePrice" required min="0" placeholder="Ingrese precio de compra" />
                     </div>
                     <div class="mb-3">
                         <label for="salePrice" class="form-label">
-                            <i class="bi bi-cash"></i> Precio de Venta
+                            <i class="bi bi-cash-stack"></i> Precio de Venta
                         </label>
-                        <input type="number" class="form-control" id="salePrice" name="salePrice" required min="0" step="0.01" placeholder="Ingrese precio de venta" />
+                        <input type="number" class="form-control" id="salePrice" name="salePrice" required min="0" placeholder="Ingrese precio de venta" />
                     </div>
                     <div class="mb-3">
                         <label for="unitSalePrice" class="form-label">
-                            <i class="bi bi-cash"></i> Precio Unitario
+                            <i class="bi bi-cash-stack"></i> Precio por Unidad
                         </label>
-                        <input type="number" class="form-control" id="unitSalePrice" name="unitSalePrice" required min="0" step="0.01" placeholder="Ingrese precio unitario" />
+                        <input type="number" class="form-control" id="unitSalePrice" name="unitSalePrice" required min="0" placeholder="Ingrese precio por unidad" />
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-warning" aria-label="Confirmar actualización de precios" title="Actualizar Precios">
+                        <button type="submit" class="btn btn-outline-warning" aria-label="Confirmar actualización de precios" title="Actualizar Precios">
                             <i class="bi bi-save me-1"></i> Actualizar
                         </button>
                     </div>
@@ -231,7 +235,7 @@
             </div>
             <div class="modal-footer justify-content-center">
                 <small class="text-muted">
-                    <i class="bi bi-info-circle"></i> Verifica los valores antes de actualizar.
+                    <i class="bi bi-info-circle"></i> Asegúrate de ingresar valores válidos.
                 </small>
             </div>
         </div>
@@ -239,37 +243,59 @@
 </div>
 
 @section Scripts {
-    <!-- Recurso de bootstrap-select (si no está incluido globalmente) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/js/bootstrap-select.min.js" integrity="sha512-F7+4i0zOCZHxUIyQFuzElrUCP6ISuWVL+JtYJ5nwNGf/7hFq5sNj8cCkD3I1c2fqWDlyutFZH6MZx3x0h7+POw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
-        // Inicializar el plugin bootstrap-select para el filtro de proveedores
         $(document).ready(function () {
-            $('.selectpicker').selectpicker();
+            if ($('.selectpicker').data('selectpicker')) {
+                $('.selectpicker').selectpicker('destroy'); // Destruye la instancia previa si existe
+            }
+            $('.selectpicker').selectpicker(); // Vuelve a inicializar SelectPicker
         });
 
-        // Función para unificar el filtrado de búsqueda por nombre, descripción y proveedor
-        function filterArticles() {
-            var searchString = document.getElementById('searchString').value.toLowerCase();
-            var selectedProvider = document.getElementById('filterProvider').value;
-            var articles = document.querySelectorAll('#articlesBody tr');
+    // Función para la búsqueda por nombre y descripción
+    function searchArticles() {
+        var searchString = document.getElementById('searchString').value.toLowerCase();
+        var articles = document.querySelectorAll('#articlesBody tr');
 
-            articles.forEach(function (article) {
-                // Se asume que la columna 3 es Nombre y la 4 es Descripción
-                var name = article.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                var description = article.querySelector('td:nth-child(4)').textContent.toLowerCase();
-                var providerId = article.getAttribute('data-provider');
+        articles.forEach(function (article) {
+            var name = article.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            var description = article.querySelector('td:nth-child(4)').textContent.toLowerCase();
+            var matchesSearch = name.includes(searchString) || description.includes(searchString);
 
-                // Si se ha seleccionado un proveedor, debe coincidir; de lo contrario se ignora
-                var matchesProvider = selectedProvider === "" || providerId === selectedProvider;
-                var matchesSearch = name.includes(searchString) || description.includes(searchString);
+            article.style.display = matchesSearch ? '' : 'none';
+        });
+    }
 
-                article.style.display = (matchesProvider && matchesSearch) ? '' : 'none';
-            });
+    // Asignar la función de búsqueda al input de búsqueda
+    document.getElementById('searchString').addEventListener('input', searchArticles);
+
+    // Función para filtrar artículos por proveedor llamando al controlador
+    function filterByProvider() {
+        var selectedProvider = document.getElementById('filterProvider').value;
+
+        // Si se selecciona "Todos los proveedores", recargar el listado completo
+        if (selectedProvider === "") {
+            window.location.href = '/Articulos/List';
+            return;
         }
 
-        // Asignar la función de filtrado a ambos controles
-        document.getElementById('searchString').addEventListener('input', filterArticles);
-        document.getElementById('filterProvider').addEventListener('change', filterArticles);
+        // Crear formulario fantasma
+        var form = document.createElement('form');
+        form.method = 'GET';
+        form.action = '/Articulos/FiltrarArticulosPorProveedor';
+
+        var providerInput = document.createElement('input');
+        providerInput.type = 'hidden';
+        providerInput.name = 'proveedorId';
+        providerInput.value = selectedProvider;
+
+        form.appendChild(providerInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // Asignar la función de filtrado al select de proveedores
+    document.getElementById('filterProvider').addEventListener('change', filterByProvider);
+
 
         // Función que se llama al hacer clic en el botón para modificar el stock
         function modifyStock(button) {

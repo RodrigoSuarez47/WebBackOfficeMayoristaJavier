@@ -14,6 +14,7 @@ public class ArticulosController : Controller
     private readonly IMemoryCache _memoryCache;
     private readonly string UrlApi;
     private readonly string CacheKey = "ListaArticulos";
+    private readonly string CacheKeyFilter = "ListaArticulosFiltrados";
     private readonly string UrlApiProveedores;
     private readonly string CacheKeyProveedores = "ListaProveedores";
 
@@ -419,5 +420,28 @@ public class ArticulosController : Controller
 
             return View("List"); 
         }
+    }
+
+    public async Task<IActionResult> FiltrarArticulosPorProveedor(int proveedorId)
+    {
+        if (proveedorId == 0)
+        {
+            return RedirectToAction("List");
+        }
+        try
+        {
+            var articulos = await GetApiResponse<List<ArticuloDTO>>($"FilterBySupplier/{proveedorId}", CacheKeyFilter, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+            ViewBag.Proveedores = await GetProveedores();
+            ViewBag.ProveedorSeleccionado = proveedorId;
+            return View("List", articulos ?? new List<ArticuloDTO>());
+        }
+        catch (Exception ex)
+        {
+            ViewBag.AlertIcon = "error";
+            ViewBag.AlertTitle = "Error";
+            ViewBag.Mensaje = $"Error al filtrar los artículos por proveedor: {ex.Message}";
+            ViewBag.Proveedores = new List<ProveedorDTO>();
+            return View("List", new List<ArticuloDTO>());
+        }   
     }
 }

@@ -75,74 +75,74 @@
     }
 
     <!-- SweetAlert2 CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        document.getElementById("proveedorForm").addEventListener("submit", function (event) {
-            event.preventDefault(); // Prevenir el envío si hay errores
+    document.getElementById("proveedorForm").addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevenir el envío si hay errores
 
-            // Obtener los campos
-            const name = document.getElementById("name").value.trim();
-            const companyName = document.getElementById("companyName").value.trim();
-            const principalPhone = document.getElementById("principalPhone").value.trim();
-            const alternativePhone = document.getElementById("alternativePhone").value.trim();
+        // Obtener los campos
+        const name = document.getElementById("name").value.trim();
+        const companyName = document.getElementById("companyName").value.trim();
+        const principalPhone = document.getElementById("principalPhone").value.trim();
+        const alternativePhone = document.getElementById("alternativePhone").value.trim();
 
-            // Validaciones
-            if (name === "") {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "El nombre no puede estar vacío",
-                    confirmButtonColor: "#d33"
-                });
-                return;
-            }
-
-            if (companyName === "") {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "El nombre de la empresa no puede estar vacío",
-                    confirmButtonColor: "#d33"
-                });
-                return;
-            }
-
-            if (!/^\d{8,9}$/.test(principalPhone)) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "El teléfono principal debe tener 8 o 9 dígitos",
-                    confirmButtonColor: "#d33"
-                });
-                return;
-            }
-
-            if (alternativePhone !== "" && !/^\d{8,9}$/.test(alternativePhone)) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "El teléfono alternativo debe tener 8 o 9 dígitos",
-                    confirmButtonColor: "#d33"
-                });
-                return;
-            }
-
-            // Confirmación antes de guardar cambios
+        // Validaciones
+        if (name === "" || name.length < 5) {
             Swal.fire({
-                icon: "warning",
-                title: "¿Agregar Proveedor?",
-                text: "¿Estás seguro de que deseas agregar este proveedor?",
-                showCancelButton: true,
-                confirmButtonText: "Sí, agregar",
-                cancelButtonText: "Cancelar",
-                confirmButtonColor: "#28a745",
-                cancelButtonColor: "#d33"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    event.target.submit(); // Si la acción es confirmada, enviamos el formulario
-                }
+                icon: "error",
+                title: "Error",
+                text: "El nombre debe tener al menos 5 caracteres",
+                confirmButtonColor: "#d33"
             });
+            return;
+        }
+
+        if (companyName === "" || companyName.length < 5) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "El nombre de la empresa debe tener al menos 5 caracteres",
+                confirmButtonColor: "#d33"
+            });
+            return;
+        }
+
+        if (!/^\d{8,9}$/.test(principalPhone)) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "El teléfono principal debe tener 8 o 9 dígitos",
+                confirmButtonColor: "#d33"
+            });
+            return;
+        }
+
+        if (alternativePhone !== "" && !/^\d{8,9}$/.test(alternativePhone)) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "El teléfono alternativo debe tener 8 o 9 dígitos",
+                confirmButtonColor: "#d33"
+            });
+            return;
+        }
+
+        // Confirmación antes de guardar cambios
+        Swal.fire({
+            icon: "warning",
+            title: "¿Agregar Proveedor?",
+            text: "¿Estás seguro de que deseas agregar este proveedor?",
+            showCancelButton: true,
+            confirmButtonText: "Sí, agregar",
+            cancelButtonText: "Cancelar",
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#d33"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                event.target.submit(); // Si la acción es confirmada, enviamos el formulario
+            }
         });
-    </script>
+    });
+</script>
 }

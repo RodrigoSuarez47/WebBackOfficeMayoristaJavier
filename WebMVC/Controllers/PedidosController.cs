@@ -189,43 +189,52 @@ namespace WebMVC.Controllers
             return View();
         }
 
-
         // POST: PedidosController/Create
         [HttpPost]
         public async Task<ActionResult> Create(PedidoDTO pedido)
         {
+            List<ArticuloDTO> articulos = await GetArticulos();
+            ViewBag.Articulos = articulos;
+
             try
             {
                 if (ModelState.IsValid)
                 {
-                    // Llamada a la API para crear el pedido
+                    if (pedido.Lines == null || !pedido.Lines.Any())
+                    {
+                        ModelState.AddModelError("", "Debe agregar al menos un artículo al pedido.");
+                        return View(pedido);
+                    }
+
                     var client = ConfigureClient();
                     var content = new StringContent(JsonConvert.SerializeObject(pedido), System.Text.Encoding.UTF8, "application/json");
+
                     var response = await client.PostAsync(_urlApi, content);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        // Si la creación es exitosa, redirige a la lista de pedidos
-                        _memoryCache.Remove(_cacheKey); // Elimina la caché antigua
+                        _memoryCache.Remove(_cacheKey);
                         return RedirectToAction(nameof(Index));
                     }
                     else
                     {
-                        // Si la API responde con un error, muestra el mensaje
                         var errorMessage = await response.Content.ReadAsStringAsync();
                         ModelState.AddModelError("", $"Error al crear el pedido: {errorMessage}");
                     }
                 }
-
+                else
+                {
+                    ModelState.AddModelError("", "Los datos del pedido no son válidos.");
+                }
                 return View(pedido);
             }
             catch (Exception ex)
             {
-                // Manejo de excepciones
                 ModelState.AddModelError("", "Hubo un error inesperado al intentar crear el pedido.");
                 return View(pedido);
             }
         }
+
 
         // GET: PedidosController/Edit/5
         public async Task<ActionResult> Edit(int id)

@@ -5,7 +5,7 @@
 }
 
 <div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light">
-    <div id="loginCard" class="card p-4 shadow-lg border-0 animate__animated animate__fadeIn">
+    <div id="loginCard" class="card p-4 shadow-lg border-0">
         <div class="card-body">
             <h1 class="card-title text-center mb-4">Iniciar Sesión</h1>
             <form asp-action="Login" method="post" id="loginForm">
@@ -73,17 +73,11 @@
     </script>
 }
 
-
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            let card = document.getElementById("loginCard");
-            card.classList.add("animate__animated", "animate__zoomIn");
-
             // Mostrar/Ocultar contraseña
             document.querySelector(".toggle-password").addEventListener("click", function () {
                 let passwordInput = document.getElementById("passwordInput");
@@ -100,24 +94,34 @@
 
             // Validación y animación en el submit
             document.getElementById("loginForm").addEventListener("submit", function (event) {
-                event.preventDefault();
+                let username = document.getElementById("usernameInput").value.trim();
+                let password = document.getElementById("passwordInput").value.trim();
+
+                // Verificar si los campos están vacíos
+                if (!username || !password) {
+                    event.preventDefault(); // Evitar el envío del formulario
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos vacíos',
+                        text: 'Por favor, ingrese su usuario y contraseña.',
+                        confirmButtonColor: "#198754"
+                    });
+                    return;
+                }
 
                 let loginButton = document.getElementById("loginButton");
                 let loginCard = document.getElementById("loginCard");
                 let loadingScreen = document.getElementById("loadingScreen");
 
                 // Ocultar formulario y mostrar animación de carga
-                loginCard.classList.add("animate__fadeOut");
-                setTimeout(() => {
-                    loginCard.classList.add("d-none");
-                    loadingScreen.classList.remove("d-none");
-                    loadingScreen.classList.add("animate__fadeIn");
-                }, 250);
+                loginCard.classList.add("d-none");
+                loadingScreen.classList.remove("d-none");
 
                 // Simular proceso de autenticación antes de enviar el formulario
                 setTimeout(() => {
                     event.target.submit();
-                }, 250);
+                }, 1000); // Reducido el tiempo de espera a 1 segundo
             });
         });
     </script>

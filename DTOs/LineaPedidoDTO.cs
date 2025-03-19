@@ -24,6 +24,8 @@ namespace DTOs
 
             public bool Assembled { get; set; } = false;
 
+            public decimal? Weight { get; set; }
+
             public decimal GetSubtotal() => Quantity * UnitPrice;
     }
 }

@@ -239,16 +239,13 @@ namespace WebMVC.Controllers
                         HttpContext.Session.SetString("Nombre", usuarioLogueado.Name);
                         return RedirectToAction("List", "Articulos");
                     }
-                    ViewBag.Mensaje = "Usuario o Contraseña incorrectos";
-                    ViewBag.AlertIcon = "error";
-                    ViewBag.AlertTitle = "Error";
                 }
                 else
                 {
-                    var cuerpo = await response.Content.ReadAsStringAsync();
-                    ViewBag.Mensaje = cuerpo;
+                    ViewBag.Mensaje = "Usuario o Contraseña incorrectos";
                     ViewBag.AlertIcon = "error";
                     ViewBag.AlertTitle = "Error";
+                    return View("Login");
                 }
             }
             catch (Exception ex)
