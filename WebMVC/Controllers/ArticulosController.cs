@@ -237,6 +237,7 @@ public class ArticulosController : Controller
             {
                 _memoryCache.Remove(CacheKey);
                 _memoryCache.Remove($"Articulo_{id}");
+                _memoryCache.Remove($"FilterBySupplier_{articulo.SupplierId}"); // Invalida la caché del filtro por proveedor
                 SetAlert("success", "Éxito", "El artículo ha sido actualizado correctamente.");
                 var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
                 return View("List", articulosActualizados);
@@ -265,6 +266,8 @@ public class ArticulosController : Controller
             {
                 _memoryCache.Remove(CacheKey);
                 _memoryCache.Remove($"Articulo_{id}");
+                ArticuloDTO articuloEliminado = articulos.Find(a => a.Id == id);
+                _memoryCache.Remove($"FilterBySupplier_{articuloEliminado.SupplierId}"); // Invalida la caché del filtro por proveedor
                 SetAlert("success", "Éxito", "El artículo ha sido eliminado.");
                 var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
                 return View("List", articulosActualizados);
@@ -278,41 +281,6 @@ public class ArticulosController : Controller
         catch (Exception ex)
         {
             SetAlert("error", "Error", $"Error al eliminar el artículo: {ex.Message}");
-            return View("List", articulos);
-        }
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> ModificarStock(int articleId, int newStock)
-    {
-        var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
-        ViewBag.Proveedores = await GetProveedores();
-        try
-        {
-            var errorMessage = await PostOrPutApiResponse($"UpdateStock/{articleId}", HttpMethod.Put, newStock).ConfigureAwait(false);
-
-            if (string.IsNullOrEmpty(errorMessage))
-            {
-                _memoryCache.Remove(CacheKey);
-                _memoryCache.Remove($"Articulo_{articleId}");
-
-                TempData["AlertIcon"] = "success";
-                TempData["AlertTitle"] = "Éxito";
-                TempData["Mensaje"] = "El stock del artículo ha sido actualizado correctamente.";
-                var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
-                return View("List", articulosActualizados);
-            }
-
-            TempData["AlertIcon"] = "error";
-            TempData["AlertTitle"] = "Error";
-            TempData["Mensaje"] = $"Error al actualizar el stock: {errorMessage}";
-            return View("List", articulos);
-        }
-        catch (Exception ex)
-        {
-            TempData["AlertIcon"] = "error";
-            TempData["AlertTitle"] = "Error";
-            TempData["Mensaje"] = $"Error al intentar actualizar el stock: {ex.Message}";
             return View("List", articulos);
         }
     }
@@ -343,6 +311,7 @@ public class ArticulosController : Controller
             {
                 _memoryCache.Remove(CacheKey);
                 _memoryCache.Remove($"Articulo_{articleId}");
+                _memoryCache.Remove($"FilterBySupplier_{articulo.SupplierId}"); // Invalida la caché del filtro por proveedor
 
                 TempData["AlertIcon"] = "success";
                 TempData["AlertTitle"] = "Éxito";
@@ -361,6 +330,43 @@ public class ArticulosController : Controller
             TempData["AlertIcon"] = "error";
             TempData["AlertTitle"] = "Error";
             TempData["Mensaje"] = $"Error al intentar actualizar los precios: {ex.Message}";
+            return View("List", articulos);
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ModificarStock(int articleId, int newStock)
+    {
+        var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+        ViewBag.Proveedores = await GetProveedores();
+        try
+        {
+            var errorMessage = await PostOrPutApiResponse($"UpdateStock/{articleId}", HttpMethod.Put, newStock).ConfigureAwait(false);
+
+            if (string.IsNullOrEmpty(errorMessage))
+            {
+                _memoryCache.Remove(CacheKey);
+                _memoryCache.Remove($"Articulo_{articleId}");
+                ArticuloDTO articuloModificado = articulos.Find(a => a.Id == articleId);
+                _memoryCache.Remove($"FilterBySupplier_{articuloModificado.SupplierId}"); // Invalida la caché del filtro por proveedor
+
+                TempData["AlertIcon"] = "success";
+                TempData["AlertTitle"] = "Éxito";
+                TempData["Mensaje"] = "El stock del artículo ha sido actualizado correctamente.";
+                var articulosActualizados = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
+                return View("List", articulosActualizados);
+            }
+
+            TempData["AlertIcon"] = "error";
+            TempData["AlertTitle"] = "Error";
+            TempData["Mensaje"] = $"Error al actualizar el stock: {errorMessage}";
+            return View("List", articulos);
+        }
+        catch (Exception ex)
+        {
+            TempData["AlertIcon"] = "error";
+            TempData["AlertTitle"] = "Error";
+            TempData["Mensaje"] = $"Error al intentar actualizar el stock: {ex.Message}";
             return View("List", articulos);
         }
     }
@@ -388,6 +394,7 @@ public class ArticulosController : Controller
         {
             _memoryCache.Remove(CacheKey);
             _memoryCache.Remove($"Articulo_{id}");
+            _memoryCache.Remove($"FilterBySupplier_{articulo.SupplierId}"); // Invalida la caché del filtro por proveedor
 
             TempData["AlertIcon"] = "success";
             TempData["AlertTitle"] = "Éxito";
@@ -407,7 +414,6 @@ public class ArticulosController : Controller
 
     public async Task<IActionResult> FiltrarArticulosPorProveedor(int proveedorId)
     {
-        var articulos = await GetApiResponse<List<ArticuloDTO>>("", CacheKey, TimeSpan.FromMinutes(10)).ConfigureAwait(false);
         ViewBag.Proveedores = await GetProveedores();
         if (proveedorId == 0)
         {
@@ -415,7 +421,9 @@ public class ArticulosController : Controller
         }
         try
         {
-            var articuloFiltradoss = await GetApiResponse<List<ArticuloDTO>>($"FilterBySupplier/{proveedorId}").ConfigureAwait(false);
+            var cacheKey = $"FilterBySupplier_{proveedorId}";
+            // No usar la caché para la llamada de filtrado
+            var articuloFiltradoss = await GetApiResponse<List<ArticuloDTO>>($"FilterBySupplier/{proveedorId}", cacheKey, TimeSpan.FromSeconds(1)).ConfigureAwait(false);
             ViewBag.ProveedorSeleccionado = proveedorId;
             return View("List", articuloFiltradoss ?? new List<ArticuloDTO>());
         }

@@ -3,7 +3,7 @@
     ViewData["Title"] = "Crear Pedido";
 }
 
-<h1 class="text-center my-4 animate__animated animate__fadeInDown">
+<h1 class="text-center my-4">
     <i class="bi bi-clipboard-plus"></i> Pedido
 </h1>
 
@@ -13,11 +13,7 @@
 
         <!-- Datos del Pedido -->
         <div class="mb-3 visually-hidden">
-            <label asp-for="OrderDate" class="form-label">
-                <i class="bi bi-calendar-check"></i> Fecha de Pedido
-            </label>
-            <input asp-for="OrderDate" class="form-control" type="date" />
-            <span asp-validation-for="OrderDate" class="text-danger"></span>
+            <input asp-for="OrderDate" type="hidden" />
         </div>
 
         <div class="mb-3">
@@ -38,13 +34,14 @@
                 <i class="bi bi-plus text-center"></i> Agregar Artículo
             </button>
         </div>
-        <!-- Total se calcula automáticamente -->
+
         <div class="mb-3">
             <label class="form-label">
                 <i class="bi bi-cash-stack"></i> Total
             </label>
-            <input type="text" id="pedidoTotal" name="Total" class="form-control" readonly value="0" />
+            <input asp-for="Total" type="text" id="pedidoTotal" class="form-control" readonly value="0" />
         </div>
+
         <div class="d-grid">
             <button type="submit" class="btn btn-outline-success" id="submitBtn">
                 <i class="bi bi-save"></i> Confirmar
@@ -55,7 +52,7 @@
 
 <!-- Plantilla oculta para línea de pedido -->
 <div id="lineaTemplate" class="d-none">
-    <div class="card mb-3 lineaPedido">
+    <div class="card mb-3 lineaPedido" data-linea-index="">
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 <!-- Selección del artículo -->
@@ -63,52 +60,57 @@
                     <label class="form-label">
                         <i class="bi bi-card-text"></i> Artículo
                     </label>
-                    <select class="form-select articleSelect" name="Lines[][ArticleId]" required>
+                    <select class="form-select articleSelect" name="Lines[0].ArticleId" required>
                         <option value="">Seleccione un artículo</option>
                         @foreach (var articulo in ViewBag.Articulos)
                         {
                             <option value="@articulo.Id"
-                            data-minimum="@articulo.MinimumPurchase"
-                            data-sale="@articulo.SalePrice"
-                            data-unit="@articulo.UnitSalePrice"
-                            data-weight="@articulo.IsSoldByWeight"
-                            data-img="@articulo.ImageUrl">
+                                    data-minimum="@articulo.MinimumPurchase"
+                                    data-sale="@articulo.SalePrice"
+                                    data-unit="@articulo.UnitSalePrice"
+                                    data-weight="@articulo.IsSoldByWeight"
+                                    data-stock="@articulo.Stock">
                                 @articulo.Name
                             </option>
                         }
                     </select>
-                    <span class="text-danger field-validation-valid" data-valmsg-for="Lines[][ArticleId]" data-valmsg-replace="true"></span>
+                    <span class="text-danger field-validation-valid" data-valmsg-replace="true"></span>
                 </div>
+
                 <!-- Cantidad -->
-                <div class="col-md-2" id="quantityContainer">
+                <div class="col-md-2 quantityContainer">
                     <label class="form-label">
                         <i class="bi bi-sort-numeric-up"></i> Cantidad
                     </label>
-                    <input type="number" class="form-control quantityInput" name="Lines[][Quantity]" min="1" value="1" required />
-                    <span class="text-danger field-validation-valid" data-valmsg-for="Lines[][Quantity]" data-valmsg-replace="true"></span>
+                    <input type="number" class="form-control quantityInput" name="Lines[0].Quantity" min="1" value="1" required />
+                    <span class="text-danger field-validation-valid" data-valmsg-replace="true"></span>
                 </div>
+
                 <!-- Peso (para artículos vendidos por peso) -->
-                <div class="col-md-2" id="weightContainer" style="display: none;">
+                <div class="col-md-2 weightContainer" style="display: none;">
                     <label class="form-label">
                         <i class="bi bi-weight"></i> Peso (kg)
                     </label>
-                    <input type="number" class="form-control weightInput" name="Lines[][Weight]" min="0" step="0.1" value="0" />
-                    <span class="text-danger field-validation-valid" data-valmsg-for="Lines[][Weight]" data-valmsg-replace="true"></span>
+                    <input type="number" class="form-control weightInput" name="Lines[0].Weight" min="0.1" step="0.1" value="1" />
+                    <span class="text-danger field-validation-valid" data-valmsg-replace="true"></span>
                 </div>
-                <!-- Precio Unitario (calculado) -->
+
+                <!-- Precio Unitario -->
                 <div class="col-md-2">
                     <label class="form-label">
                         <i class="bi bi-cash"></i> Precio Unitario
                     </label>
-                    <input type="text" class="form-control unitPriceInput" name="Lines[][UnitPrice]" readonly value="0.00" />
+                    <input type="text" class="form-control unitPriceInput" name="Lines[0].UnitPrice" readonly value="0.00" />
                 </div>
-                <!-- Subtotal (calculado) -->
+
+                <!-- Subtotal -->
                 <div class="col-md-2">
                     <label class="form-label">
                         <i class="bi bi-calculator"></i> Subtotal
                     </label>
                     <input type="text" class="form-control subtotalInput" readonly value="0.00" />
                 </div>
+
                 <!-- Botón para eliminar la línea -->
                 <div class="col-md-2 text-center">
                     <button type="button" class="btn btn-danger removeLineaBtn" title="Eliminar Artículo">
@@ -119,245 +121,387 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
-
     }
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // Función para agregar una nueva línea
-        function addLinea() {
-            var template = document.getElementById('lineaTemplate').innerHTML;
-            var container = document.getElementById('lineasContainer');
-            var div = document.createElement('div');
-            div.innerHTML = template;
-            container.appendChild(div.firstElementChild);
 
-            var nuevaLinea = container.lastElementChild;
-            attachLineaEvents(nuevaLinea);
-
-            // Inicializar Select2 en el select de artículos
-            var articleSelect = nuevaLinea.querySelector('.articleSelect');
-            $(articleSelect).select2({
-                placeholder: "Seleccione un artículo",
-                allowClear: true,
-                templateResult: formatArticle,
-                templateSelection: formatArticleSelection
-            });
+    <style>
+        /* Estilos optimizados para Select2 */
+        .select2-container--default .select2-selection--single {
+            height: 38px;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 5px;
         }
 
-        // Evitar el comportamiento predeterminado del botón de agregar línea
-        document.getElementById('addLineaBtn').addEventListener('click', function (event) {
-            event.preventDefault();
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                display: flex !important;
+                align-items: center;
+                line-height: normal;
+            }
+
+        .select2-selection__arrow {
+            height: 36px !important;
+        }
+
+        /* Estilos para las opciones */
+        .article-option {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+            min-height: 50px;
+        }
+
+        .article-image-container {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .article-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .article-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .article-name {
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .article-details {
+            font-size: 0.75em;
+            color: #6c757d;
+        }
+
+        .no-stock {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* Cache de imágenes */
+        .image-cache {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+
+    <div class="image-cache" id="imageCache"></div>
+
+    <script>
+        // Cache para imágenes ya cargadas
+        var imageCache = {};
+
+        $(document).ready(function () {
+            // Precargar imágenes de los artículos disponibles
+        @foreach (var articulo in ViewBag.Articulos)
+        {
+            if (!string.IsNullOrEmpty(articulo.ImageUrl))
+            {
+                <text>
+                                preloadImage('@articulo.ImageUrl');
+                </text>
+            }
+        }
+
+            let lineaCounter = 0;
             addLinea();
-        });
 
-        // Función para enviar el formulario cuando se hace clic en "Confirmar"
-        document.getElementById('submitBtn').addEventListener('click', function (event) {
-            event.preventDefault();
-
-            var isValid = true;
-            document.querySelectorAll('.lineaPedido').forEach(function(linea) {
-                var articleSelect = linea.querySelector('.articleSelect');
-                var quantityInput = linea.querySelector('.quantityInput');
-                var weightInput = linea.querySelector('.weightInput');
-                // Si se vende por peso, usaremos el campo de peso; de lo contrario, la cantidad
-                var isSoldByWeight = articleSelect.selectedOptions[0] && articleSelect.selectedOptions[0].getAttribute('data-weight') === 'true';
-
-                if (!articleSelect.value) {
-                    isValid = false;
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Datos incompletos',
-                        text: 'Por favor, seleccione un artículo.',
-                        confirmButtonColor: '#d33',
-                        confirmButtonText: 'Aceptar'
-                    });
-                } else if (isSoldByWeight) {
-                    if (parseFloat(weightInput.value) <= 0) {
-                        isValid = false;
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Peso requerido',
-                            text: 'El artículo requiere peso, por favor ingréselo.',
-                            confirmButtonColor: '#d33',
-                            confirmButtonText: 'Aceptar'
-                        });
-                    }
-                } else {
-                    if (parseFloat(quantityInput.value) <= 0) {
-                        isValid = false;
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Datos incompletos',
-                            text: 'La cantidad debe ser mayor a 0.',
-                            confirmButtonColor: '#d33',
-                            confirmButtonText: 'Aceptar'
-                        });
-                    }
+            function preloadImage(url) {
+                if (!imageCache[url]) {
+                    var img = new Image();
+                    img.src = url;
+                    img.onload = function() {
+                        imageCache[url] = true;
+                    };
+                    img.onerror = function() {
+                        console.error(`Error loading image: ${url}`);
+                    };
+                    $('#imageCache').append(img);
                 }
-            });
+            }
 
-            if (isValid) {
-                var formData = new FormData(document.getElementById('pedidoForm'));
+            function formatArticleResult(article) {
+                if (!article.id) return article.text;
 
-                $.ajax({
-                    url: '@Url.Action("Create", "Pedidos")',
-                    method: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function (response) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Pedido Creado',
-                            text: 'El pedido ha sido creado exitosamente.',
-                            confirmButtonColor: '#3085d6',
-                            confirmButtonText: 'Aceptar'
-                        }).then(() => {
-                            window.location.href = '@Url.Action("Index", "Pedidos")';
-                        });
-                    },
-                    error: function (xhr, status, error) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error al crear el pedido',
-                            text: 'Hubo un problema al intentar crear el pedido. Intente nuevamente.',
-                            confirmButtonColor: '#d33',
-                            confirmButtonText: 'Aceptar'
-                        });
+                var $option = $(article.element);
+                var imageUrl = $option.data('img') ? $option.data('img') : '';
+                var name = $option.text();
+                var minimum = $option.data('minimum');
+                var stock = $option.data('stock');
+                var salePrice = $option.data('sale');
+                var unitPrice = $option.data('unit');
+
+                var stockText = stock > 0 ?
+                    `Stock: ${stock}` :
+                    `<span class="no-stock">SIN STOCK</span>`;
+
+                return `
+                    <div class="article-option">
+                        <div class="article-image-container">
+                            <img src="${imageUrl}" class="article-image"
+                                 onerror="this.onerror=null;this.src='https://via.placeholder.com/50';"
+                                 loading="lazy">
+                        </div>
+                        <div class="article-info">
+                            <span class="article-name">${name}</span>
+                            <span class="article-details">
+                                Mínimo: ${minimum} | ${stockText} |
+                                Precio: $${salePrice} (Unitario: $${unitPrice})
+                            </span>
+                        </div>
+                    </div>`;
+            }
+
+            function formatArticleSelection(article) {
+                if (!article.id) return article.text;
+
+                var $option = $(article.element);
+                var imageUrl = $option.data('img') ? $option.data('img') : '';
+                var name = $option.text();
+
+                return `
+                    <div class="article-option">
+                        <div class="article-image-container" style="width:30px;height:30px">
+                            <img src="${imageUrl}" class="article-image"
+                                 style="width:30px;height:30px"
+                                 onerror="this.onerror=null;this.src='https://via.placeholder.com/30';">
+                        </div>
+                        <span class="article-name">${name}</span>
+                    </div>`;
+            }
+
+            function addLinea() {
+                var template = $('#lineaTemplate').html();
+                var container = $('#lineasContainer');
+
+                template = template.replace(/\[0\]/g, `[${lineaCounter}]`);
+
+                var div = $('<div>').html(template);
+                container.append(div.children().first());
+
+                var nuevaLinea = container.children().last();
+                nuevaLinea.attr('data-linea-index', lineaCounter);
+
+                nuevaLinea.find('.articleSelect').select2({
+                    templateResult: formatArticleResult,
+                    templateSelection: formatArticleSelection,
+                    escapeMarkup: function(m) { return m; },
+                    placeholder: "Seleccione un artículo",
+                    allowClear: false,
+                    width: '100%',
+                    dropdownParent: nuevaLinea
+                });
+
+                nuevaLinea.find('.articleSelect option').each(function() {
+                    var stock = $(this).data('stock');
+                    if (stock <= 0) {
+                        $(this).prop('disabled', true);
                     }
                 });
-            }
-        });
 
-        // Función para mostrar imagen y texto en las opciones del select
-        function formatArticle(article) {
-            if (!article.id) { return article.text; }
-            var imgUrl = $(article.element).data('img');
-            if (!imgUrl) { return article.text; }
-            var $article = $(`
-                <span>
-                    <img src="${imgUrl}" style="width: 40px; height: 40px; margin-right: 10px;" />
-                    ${article.text}
-                    <div class="small text-muted" style="margin-top: 5px;">Mínimo: ${$(article.element).data('minimum')}</div>
-                </span>
-            `);
-            return $article;
-        }
-
-        // Función para mostrar el artículo seleccionado
-        function formatArticleSelection(article) {
-            if (!article.id) { return article.text; }
-            var imgUrl = $(article.element).data('img');
-            if (!imgUrl) { return article.text; }
-            var $article = $(`
-                <span>
-                    <img src="${imgUrl}" style="width: 20px; height: 20px; margin-right: 5px;" />
-                    ${article.text}
-                </span>
-            `);
-            return $article;
-        }
-
-        // Función para recalcular el precio unitario y subtotal de una línea
-        function recalcLinea(linea) {
-            var articleSelect = linea.querySelector('.articleSelect');
-            var quantityInput = linea.querySelector('.quantityInput');
-            var unitPriceInput = linea.querySelector('.unitPriceInput');
-            var subtotalInput = linea.querySelector('.subtotalInput');
-
-            var selectedOption = articleSelect.options[articleSelect.selectedIndex];
-            if (!selectedOption || selectedOption.value === "") {
-                unitPriceInput.value = "0.00";
-                subtotalInput.value = "0.00";
-                return;
+                attachLineaEvents(nuevaLinea);
+                lineaCounter++;
             }
 
-            // Obtener datos del artículo
-            var minimum = parseInt(selectedOption.getAttribute("data-minimum"));
-            var salePrice = parseFloat(selectedOption.getAttribute("data-sale"));
-            var unitPrice = parseFloat(selectedOption.getAttribute("data-unit"));
-            var isSoldByWeight = selectedOption.getAttribute("data-weight") === "true";
-            var quantity = parseFloat(quantityInput.value) || 0;
-
-            if (isSoldByWeight) {
-                unitPrice = salePrice;
-            } else {
-                unitPrice = quantity >= minimum ? salePrice : unitPrice;
-            }
-
-            unitPriceInput.value = unitPrice.toFixed(2);
-            subtotalInput.value = (unitPrice * quantity).toFixed(2);
-        }
-
-        // Función para recalcular el total del pedido
-        function recalcTotal() {
-            var total = 0;
-            document.querySelectorAll('.subtotalInput').forEach(function(subInput) {
-                total += parseFloat(subInput.value) || 0;
-            });
-            document.getElementById('pedidoTotal').value = total.toFixed(2);
-        }
-
-        // Función para verificar si un artículo ya está en otra línea
-        function isArticleAlreadySelected(articleId) {
-            var existingArticles = document.querySelectorAll('.articleSelect');
-            return Array.from(existingArticles).some(select => select.value === articleId);
-        }
-
-        // Función para asignar eventos a una línea
-        function attachLineaEvents(linea) {
-            var articleSelect = linea.querySelector('.articleSelect');
-            var quantityInput = linea.querySelector('.quantityInput');
-
-            articleSelect.addEventListener('change', function() {
-                // Verificar si ya existe el artículo en otra línea
-                if (isArticleAlreadySelected(articleSelect.value)) {
+            // Función para eliminar una línea
+            function removeLinea(button) {
+                var linea = button.closest('.lineaPedido');
+                if ($('.lineaPedido').length > 1) {
+                    linea.remove();
+                    recalcTotal();
+                    reindexLines();
+                } else {
                     Swal.fire({
-                        icon: "warning",
-                        title: "Artículo duplicado",
-                        text: "Este artículo ya ha sido agregado al pedido.",
-                        confirmButtonColor: "#d33"
+                        icon: 'warning',
+                        title: 'No puede eliminar',
+                        text: 'Debe haber al menos un artículo en el pedido',
+                        confirmButtonText: 'Entendido'
                     });
-                    articleSelect.value = "";
-                    $(articleSelect).trigger('change');
+                }
+            }
+
+            // Reindexar las líneas después de eliminar
+            function reindexLines() {
+                $('.lineaPedido').each(function(index) {
+                    $(this).attr('data-linea-index', index);
+                    $(this).find('[name^="Lines"]').each(function() {
+                        var name = $(this).attr('name').replace(/\[\d+\]/, `[${index}]`);
+                        $(this).attr('name', name);
+                    });
+                });
+            }
+
+            // Función para recalcular una línea con la nueva lógica de precios
+            function recalcLinea(linea) {
+                var articleSelect = linea.find('.articleSelect');
+                var selectedOption = articleSelect.find('option:selected');
+                var quantityInput = linea.find('.quantityInput');
+                var unitPriceInput = linea.find('.unitPriceInput');
+                var subtotalInput = linea.find('.subtotalInput');
+
+                if (!selectedOption.val()) {
+                    unitPriceInput.val("0.00");
+                    subtotalInput.val("0.00");
                     return;
                 }
 
-                var selectedOption = articleSelect.options[articleSelect.selectedIndex];
-                var isSoldByWeight = selectedOption.getAttribute("data-weight") === "true";
-                var quantityContainer = linea.querySelector('#quantityContainer');
-                var weightContainer = linea.querySelector('#weightContainer');
-                var weightInput = linea.querySelector('.weightInput');
+                var minimum = parseInt(selectedOption.data('minimum'));
+                var salePrice = parseFloat(selectedOption.data('sale'));
+                var unitSalePrice = parseFloat(selectedOption.data('unit'));
+                var quantity = parseFloat(quantityInput.val()) || 0;
+                var stock = parseInt(selectedOption.data('stock'));
 
-                if (isSoldByWeight) {
-                    weightContainer.style.display = 'block';
-                    quantityContainer.style.display = 'none';
-                    weightInput.value = 1; // Establecer peso por defecto
-                } else {
-                    weightContainer.style.display = 'none';
-                    quantityContainer.style.display = 'block';
-                    quantityInput.value = 1; // Establecer cantidad por defecto
+                // Validar stock
+                if (quantity > stock) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Stock insuficiente',
+                        text: `No hay suficiente stock para ${selectedOption.text()}. Stock disponible: ${stock}`,
+                        confirmButtonText: 'Entendido'
+                    });
+                    quantityInput.val(stock);
+                    quantity = stock;
                 }
 
-                recalcLinea(linea);
-                recalcTotal();
+                // Calcular precio unitario según cantidad mínima
+                var unitPrice = quantity < minimum ? unitSalePrice : salePrice;
+                var subtotal = unitPrice * quantity;
+
+                unitPriceInput.val(unitPrice.toFixed(2));
+                subtotalInput.val(subtotal.toFixed(2));
+            }
+
+            // Función para recalcular el total
+            function recalcTotal() {
+                var total = 0;
+                $('.subtotalInput').each(function() {
+                    total += parseFloat($(this).val()) || 0;
+                });
+                $('#pedidoTotal').val(total.toFixed(2));
+            }
+
+            // Asignar eventos a una línea
+            function attachLineaEvents(linea) {
+                var articleSelect = linea.find('.articleSelect');
+                var quantityInput = linea.find('.quantityInput');
+
+                articleSelect.on('change', function() {
+                    var selectedOption = $(this).find('option:selected');
+                    var stock = parseInt(selectedOption.data('stock'));
+
+                    // Si no hay stock, mostrar advertencia
+                    if (stock <= 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Sin stock',
+                            text: 'Este artículo no tiene stock disponible',
+                            confirmButtonText: 'Entendido'
+                        });
+                    }
+
+                    recalcLinea(linea);
+                    recalcTotal();
+                });
+
+                quantityInput.on('input', function() {
+                    recalcLinea(linea);
+                    recalcTotal();
+                });
+            }
+
+            // Evento para agregar línea
+            $('#addLineaBtn').click(function(e) {
+                e.preventDefault();
+                addLinea();
             });
 
-            quantityInput.addEventListener('input', function() {
-                recalcLinea(linea);
-                recalcTotal();
+            // Evento para eliminar línea
+            $(document).on('click', '.removeLineaBtn', function() {
+                removeLinea($(this));
             });
-        }
 
-        // Inicializar una línea por defecto al cargar la página
-        window.addEventListener('load', function () {
-            addLinea();
+            // Validación antes de enviar
+            $('#pedidoForm').submit(function(e) {
+                var isValid = true;
+                var hasValidLines = false;
+                var stockErrors = [];
+
+                $('.lineaPedido').each(function() {
+                    var linea = $(this);
+                    var articleSelect = linea.find('.articleSelect');
+                    var selectedOption = articleSelect.find('option:selected');
+                    var quantityInput = linea.find('.quantityInput');
+                    var stock = parseInt(selectedOption.data('stock'));
+
+                    // Validar artículo seleccionado
+                    if (!articleSelect.val()) {
+                        isValid = false;
+                        linea.find('.articleSelect').addClass('is-invalid');
+                    } else {
+                        linea.find('.articleSelect').removeClass('is-invalid');
+                        hasValidLines = true;
+
+                        // Validar stock
+                        var quantity = parseInt(quantityInput.val());
+                        if (quantity > stock) {
+                            stockErrors.push(`<li>${selectedOption.text()} (Stock: ${stock}, Pedido: ${quantity})</li>`);
+                            isValid = false;
+                            quantityInput.addClass('is-invalid');
+                        } else {
+                            quantityInput.removeClass('is-invalid');
+                        }
+                    }
+
+                    // Validar cantidad
+                    if (!quantityInput.val() || parseInt(quantityInput.val()) <= 0) {
+                        isValid = false;
+                        quantityInput.addClass('is-invalid');
+                    } else {
+                        quantityInput.removeClass('is-invalid');
+                    }
+                });
+
+                if (!hasValidLines) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Debe agregar al menos un artículo válido',
+                        confirmButtonText: 'Entendido'
+                    });
+                    isValid = false;
+                }
+
+                if (stockErrors.length > 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Stock insuficiente',
+                        html: `Los siguientes artículos no tienen suficiente stock:<ul>${stockErrors.join('')}</ul>`,
+                        confirmButtonText: 'Entendido'
+                    });
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
         });
     </script>
 }
+
